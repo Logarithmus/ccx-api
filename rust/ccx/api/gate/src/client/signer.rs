@@ -3,6 +3,7 @@ use std::io;
 use std::pin::Pin;
 
 pub use ccx_api_lib::GateApiCred;
+use hex::ToHex;
 use sha2::Digest;
 use smart_string::SmartString;
 use thiserror::Error;
@@ -58,13 +59,32 @@ impl GateSigner for GateApiCred {
     }
 }
 
-// Request Method + "\n" + Request URL + "\n" + Query String + "\n" + HexEncode(SHA512(Request Payload)) + "\n" + Timestamp
+/// Generate signature string. It needs to be signed using the secret
+///
+/// In APIv4, signature string is concatenated as the following way:
+///
+/// ```
+/// Request Method + "\n" + Request URL + "\n" + Query String + "\n" + HexEncode(SHA512(Request Payload)) + "\n" + Timestamp`
+/// ```
+pub fn signature_string(
+    method: &str,
+    path: &str,
+    query: &str,
+    payload: &str,
+    timestamp: &str,
+) -> String {
+    let mut sha = sha2::Sha512::new();
+    sha.update(payload.as_bytes());
+    let hex_sha512_payload: SmartString<128> = sha.finalize().encode_hex();
+    format!("{method}\n{path}\n{query}\n{hex_sha512_payload}\n{timestamp}")
+}
+
 pub fn sign(
     secret: &str,
-    request_method: &str,
-    request_url: &str,
-    request_query: &str,
-    request_payload: &str,
+    method: &str,
+    path: &str,
+    query: &str,
+    payload: &str,
     timestamp: &str,
 ) -> SmartString<128> {
     use hex::ToHex;
@@ -72,23 +92,9 @@ pub fn sign(
     use hmac::Mac;
     use sha2::Sha512;
 
-    let mut sha = Sha512::new();
-    sha.update(request_payload.as_bytes());
-    let hex_sha512_payload: SmartString<128> = sha.finalize().encode_hex();
-
     let mut mac =
         Hmac::<Sha512>::new_from_slice(secret.as_bytes()).expect("HMAC can take key of any size");
-
-    mac.update(request_method.as_bytes());
-    mac.update("\n".as_bytes());
-    mac.update(request_url.as_bytes());
-    mac.update("\n".as_bytes());
-    mac.update(request_query.as_bytes());
-    mac.update("\n".as_bytes());
-    mac.update(hex_sha512_payload.as_bytes());
-    mac.update("\n".as_bytes());
-    mac.update(timestamp.as_bytes());
-
+    mac.update(signature_string(method, path, query, payload, timestamp).as_bytes());
     mac.finalize().into_bytes().encode_hex()
 }
 
