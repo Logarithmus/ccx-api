@@ -63,7 +63,7 @@ impl GateSigner for GateApiCred {
 ///
 /// In APIv4, signature string is concatenated as the following way:
 ///
-/// ```
+/// ```ignore
 /// Request Method + "\n" + Request URL + "\n" + Query String + "\n" + HexEncode(SHA512(Request Payload)) + "\n" + Timestamp`
 /// ```
 pub fn signature_string(
@@ -118,7 +118,7 @@ gen_sign('123', '1700073707111', 'GET', '/api/v4/task', None, '{the_answer: 42}'
     "#;
 
     #[test]
-    fn test_sign() {
+    fn sign_task() {
         let hex_digest = sign(
             "123",
             "GET",
@@ -131,6 +131,40 @@ gen_sign('123', '1700073707111', 'GET', '/api/v4/task', None, '{the_answer: 42}'
             hex_digest,
             "43299a924cf9663f5e6bfc6ab0c63eebc66d402c6dee61f0732b51b495206ff0\
              5f2fd19bef0bc00dcf87fb0c5c5f54abb0309a282734cdf29f5cd1230f64b6e7"
+        );
+    }
+
+    #[test]
+    fn sign_list_all_orders() {
+        let hex_digest = sign(
+            "secret",
+            "GET",
+            "/api/v4/futures/orders",
+            "contract=BTC_USD&status=finished&limit=50",
+            "",
+            "1541993715",
+        );
+        assert_eq!(
+            hex_digest,
+            "55f84ea195d6fe57ce62464daaa7c3c02fa9d1dde954e4c898289c9a2407a3d6\
+             fb3faf24deff16790d726b66ac9f74526668b13bd01029199cc4fcc522418b8a"
+        );
+    }
+
+    #[test]
+    fn sign_create_new_order() {
+        let hex_digest = sign(
+            "secret",
+            "POST",
+            "/api/v4/futures/orders",
+            "",
+            r#"{"contract":"BTC_USD","type":"limit","size":100,"price":6800,"time_in_force":"gtc"}"#,
+            "1541993715",
+        );
+        assert_eq!(
+            hex_digest,
+            "eae42da914a590ddf727473aff25fc87d50b64783941061f47a3fdb92742541f\
+             c4c2c14017581b4199a1418d54471c269c03a38d788d802e2c306c37636389f0"
         );
     }
 }
