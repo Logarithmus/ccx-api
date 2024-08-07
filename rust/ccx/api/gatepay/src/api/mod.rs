@@ -48,7 +48,6 @@ pub use with_network::*;
 
 #[cfg(feature = "with_network")]
 mod with_network {
-    use ccx_api_lib::GatepayApiCred;
     use ccx_api_lib::Proxy;
 
     pub use super::*;
@@ -57,6 +56,7 @@ mod with_network {
     use crate::client::rest::GatepayRestClient;
     use crate::client::rest::RequestError;
     use crate::client::signer::GatepaySigner;
+    use crate::util::GatepayApiCred;
 
     #[derive(Clone)]
     pub struct GatepayApi<S>

@@ -116,7 +116,6 @@ pub struct GateErrorInfo {
 /// | INTERNAL | Internal server error |
 /// | SERVER_ERROR | Internal server error |
 /// | TOO_BUSY | Server is too busy at the moment |
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Error)]
 #[serde(tag = "label")]
 pub enum GateApiError {

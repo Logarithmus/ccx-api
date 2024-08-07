@@ -1,27 +1,31 @@
+use chrono::DateTime;
+use chrono::Utc;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_with::formats::Flexible;
+use serde_with::serde_as;
+use serde_with::skip_serializing_none;
+use serde_with::TimestampSeconds;
 use smart_string::SmartString;
 
 use crate::api::ApiMethod;
 use crate::api::ApiVersion;
+use crate::api::PrivateRequest;
 use crate::api::Request;
-use crate::util::dt_gate::DtGate;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[skip_serializing_none]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct WithdrawalWithdrawRequest {
     /// Client order id, up to 32 length and can only include 0-9, A-Z, a-z, underscore(_), hyphen(-) or dot(.)
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub withdraw_order_id: Option<SmartString<32>>,
     /// Currency amount
     pub amount: Decimal,
     /// Currency name
     pub currency: SmartString,
     /// Withdrawal address. Required for withdrawals
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub address: Option<SmartString<66>>,
     /// Additional remarks with regards to the withdrawal
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memo: Option<SmartString>,
     /// Name of the chain used in withdrawals
     pub chain: SmartString,
@@ -30,24 +34,23 @@ pub struct WithdrawalWithdrawRequest {
 impl Request for WithdrawalWithdrawRequest {
     const METHOD: ApiMethod = ApiMethod::Post;
     const VERSION: ApiVersion = ApiVersion::V4;
-    const PATH: &'static str = "withdrawals";
-    const IS_PUBLIC: bool = false;
     type Response = WithdrawalWithdrawResponse;
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+impl PrivateRequest for WithdrawalWithdrawRequest {}
+
+#[serde_as]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct WithdrawalWithdrawResponse {
     /// Record ID
     pub id: SmartString,
     /// Hash record of the withdrawal
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub txid: Option<SmartString<64>>,
     /// Client order id, up to 32 length and can only include 0-9, A-Z, a-z, underscore(_), hyphen(-) or dot(.)
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub withdraw_order_id: Option<SmartString<32>>,
     /// Operation time
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub timestamp: Option<DtGate>,
+    #[serde_as(as = "Option<TimestampSeconds<i64, Flexible>>")]
+    pub timestamp: Option<DateTime<Utc>>,
     /// Currency amount
     pub amount: Decimal,
     /// Currency name
@@ -55,7 +58,6 @@ pub struct WithdrawalWithdrawResponse {
     /// Withdrawal address. Required for withdrawals
     pub address: SmartString<66>,
     /// Additional remarks with regards to the withdrawal
-    #[serde(default)]
     pub memo: Option<SmartString>,
     /// Record status.
     pub status: WithdrawalWithdrawStatus,
@@ -128,11 +130,11 @@ impl WithdrawalWithdrawStatus {
 #[cfg(feature = "with_network")]
 mod with_network {
     use super::*;
+    use crate::api::withdrawal::WithdrawalApi;
     use crate::client::rest::RequestError;
     use crate::client::signer::GateSigner;
-    use crate::GateApi;
 
-    impl<S: GateSigner> GateApi<S> {
+    impl<S: GateSigner> WithdrawalApi<S> {
         /// # Withdraw
         ///
         /// Withdraw
@@ -148,24 +150,11 @@ mod with_network {
         /// * `address` - Withdrawal address. Required for withdrawals
         /// * `memo` - Additional remarks with regards to the withdrawal
         /// * `chain` - Name of the chain used in withdrawals
-        pub async fn withdrawal_withdraw(
+        pub async fn withdraw(
             &self,
-            withdraw_order_id: Option<SmartString<32>>,
-            amount: Decimal,
-            currency: SmartString,
-            address: Option<SmartString<66>>,
-            memo: Option<SmartString>,
-            chain: SmartString,
+            request: &WithdrawalWithdrawRequest,
         ) -> Result<<WithdrawalWithdrawRequest as Request>::Response, RequestError> {
-            self.request(&WithdrawalWithdrawRequest {
-                withdraw_order_id,
-                amount,
-                currency,
-                address,
-                memo,
-                chain,
-            })
-            .await
+            self.0.signed_request("/withdrawals", request).await
         }
     }
 }
@@ -195,7 +184,7 @@ mod tests {
             res,
             WithdrawalWithdrawResponse {
                 id: "210496".into(),
-                timestamp: Some(DtGate::from_timestamp(1542000000)),
+                timestamp: DateTime::from_timestamp(1542000000, 0),
                 withdraw_order_id: Some("order_123456".into()),
                 currency: "USDT".into(),
                 address: "1HkxtBAMrA3tP5ENnYY2CZortjZvFDH5Cs".into(),

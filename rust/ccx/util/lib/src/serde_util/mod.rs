@@ -1,3 +1,9 @@
+/// (De)serialize empty string as [None]
+///
+/// Unlike `serde_with::NoneAsEmptyString`, it uses `Serialize` & `Deserialize`
+/// instead of [FromStr](std::str::FromStr) & [Display](core::fmt::Display)
+pub mod none_as_empty_str;
+
 use serde::Deserialize;
 use serde::Deserializer;
 

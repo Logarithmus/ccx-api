@@ -1,6 +1,5 @@
 use chrono::DateTime;
 use chrono::NaiveDateTime;
-use chrono::TimeZone;
 use chrono::Utc;
 use derive_more::Deref;
 use derive_more::From;
@@ -31,7 +30,8 @@ mod datetime {
         D: serde::Deserializer<'de>,
     {
         let date_time_str = String::deserialize(deserializer)?;
-        Utc.datetime_from_str(&date_time_str, "%Y-%m-%d %H:%M:%S%.f")
+        NaiveDateTime::parse_from_str(&date_time_str, "%Y-%m-%d %H:%M:%S%.f")
+            .map(|naive| naive.and_utc())
             .map_err(serde::de::Error::custom)
     }
 }
@@ -39,7 +39,7 @@ mod datetime {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Timelike;
+    use chrono::{TimeZone, Timelike};
 
     const DATE_TIME_STR: &str = "2020-03-11 20:48:46.622052";
 

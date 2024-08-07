@@ -5,6 +5,7 @@ use smart_string::SmartString;
 
 use crate::api::ApiMethod;
 use crate::api::ApiVersion;
+use crate::api::PrivateRequest;
 use crate::api::Request;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -47,10 +48,10 @@ pub enum WalletAccountEnum {
 impl Request for WalletTransferRequest {
     const METHOD: ApiMethod = ApiMethod::Post;
     const VERSION: ApiVersion = ApiVersion::V4;
-    const PATH: &'static str = "wallet/transfers";
-    const IS_PUBLIC: bool = false;
     type Response = WalletTransferResponse;
 }
+
+impl PrivateRequest for WalletTransferRequest {}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WalletTransferResponse {
@@ -61,11 +62,11 @@ pub struct WalletTransferResponse {
 #[cfg(feature = "with_network")]
 mod with_network {
     use super::*;
+    use crate::api::wallet::WalletApi;
     use crate::client::rest::RequestError;
     use crate::client::signer::GateSigner;
-    use crate::GateApi;
 
-    impl<S: GateSigner> GateApi<S> {
+    impl<S: GateSigner> WalletApi<S> {
         /// # Transfer between trading accounts
         ///
         /// Transfer between trading accounts
@@ -89,7 +90,7 @@ mod with_network {
         ///    account.
         /// * `settle` - Futures settle currency. Required if transferring from or to futures
         ///    account.
-        pub async fn wallet_transfer(
+        pub async fn transfer(
             &self,
             currency: SmartString,
             from: WalletAccountEnum,
@@ -98,15 +99,15 @@ mod with_network {
             currency_pair: Option<SmartString>,
             settle: Option<SmartString>,
         ) -> Result<<WalletTransferRequest as Request>::Response, RequestError> {
-            self.request(&WalletTransferRequest {
+            let request = WalletTransferRequest {
                 currency,
                 from,
                 to,
                 amount,
                 currency_pair,
                 settle,
-            })
-            .await
+            };
+            self.0.signed_request("/wallet/transfers", &request).await
         }
     }
 }

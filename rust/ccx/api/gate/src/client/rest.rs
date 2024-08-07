@@ -2,23 +2,25 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use ccx_api_lib::make_client;
-use ccx_api_lib::Client;
 use ccx_api_lib::ClientRequest;
 use ccx_api_lib::Method;
 use ccx_api_lib::PayloadError;
 use ccx_api_lib::SendRequestError;
+use chrono::Utc;
 use smart_string::DisplayExt;
 use smart_string::SmartString;
 use thiserror::Error;
 use uuid::Uuid;
 
+use super::websocket::WebsocketStream;
 use crate::api::ApiMethod;
 use crate::api::GateApiError;
+use crate::api::PrivateRequest;
 use crate::api::Request;
 use crate::client::config::GateApiConfig;
 use crate::client::signer::GateSigner;
 use crate::client::signer::SignError;
-use crate::util::dt_gate::DtGate;
+use crate::error::GateResult;
 
 #[derive(Debug, Error)]
 pub enum CallError {
@@ -41,17 +43,11 @@ pub enum RequestError {
 }
 
 /// API client.
-pub struct GateRestClient<S>
-where
-    S: GateSigner,
-{
+pub struct RestClient<S> {
     inner: Arc<ClientInner<S>>,
 }
 
-impl<S> Clone for GateRestClient<S>
-where
-    S: GateSigner,
-{
+impl<S> Clone for RestClient<S> {
     fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
@@ -59,60 +55,44 @@ where
     }
 }
 
-struct ClientInner<S>
-where
-    S: GateSigner,
-{
+struct ClientInner<S> {
     config: GateApiConfig<S>,
 }
 
-pub struct GateRequest<R, S>
-where
-    R: Request,
-    S: GateSigner,
-{
-    api_client: GateRestClient<S>,
+pub struct GateRequest<R, S> {
+    api_client: RestClient<S>,
     request: ClientRequest,
     body: String,
     _phantom: std::marker::PhantomData<R>,
 }
 
-pub struct GatePreparedRequest<R, S>
-where
-    R: Request,
-    S: GateSigner,
-{
-    api_client: GateRestClient<S>,
+pub struct GatePreparedRequest<R, S> {
+    api_client: RestClient<S>,
     request: ClientRequest,
     body: String,
-    timestamp: DtGate,
+    timestamp: i64,
     // query: SmartString<254>,
     _phantom: std::marker::PhantomData<R>,
 }
 
-pub struct GateSignedRequest<R>
-where
-    R: Request,
-{
+pub struct GateSignedRequest<R> {
     request: ClientRequest,
     body: String,
     _phantom: std::marker::PhantomData<R>,
 }
 
-impl<S> GateRestClient<S>
-where
-    S: GateSigner,
-{
+impl<S> RestClient<S> {
     pub fn new(config: GateApiConfig<S>) -> Self {
         let inner = Arc::new(ClientInner { config });
         Self { inner }
     }
 
-    pub(super) fn rest_client(&self) -> Client {
+    /// REST and Websocket client from `awc` crate
+    pub(super) fn client(&self) -> awc::Client {
         make_client(false, self.inner.config.proxy.as_ref())
     }
 
-    pub fn prepare_rest<R: Request>(&self, request: &R) -> GateRequest<R, S> {
+    pub fn prepare_rest<R: Request>(&self, path: &str, request: &R) -> GateRequest<R, S> {
         let body = match R::METHOD {
             ApiMethod::Get | ApiMethod::Delete => "".to_string(),
             ApiMethod::Post | ApiMethod::Put => serde_json::to_string(request).unwrap(),
@@ -126,10 +106,10 @@ where
         let version = R::VERSION.as_str();
         let url_base = self.inner.config.api_base.as_str();
         let slash = if url_base.ends_with('/') { "" } else { "/" };
-        let url: SmartString<254> = format_args!("{url_base}{slash}{version}/{}", R::PATH).to_fmt();
+        let url: SmartString<254> = format_args!("{url_base}{slash}{version}{path}").to_fmt();
 
         let mut req = self
-            .rest_client()
+            .client()
             .request(method, url.as_str())
             .append_header(("Accept", "application/json"))
             .append_header(("Content-Type", "application/json"));
@@ -147,14 +127,15 @@ where
             _phantom: std::marker::PhantomData,
         }
     }
+
+    pub async fn websocket(&self) -> GateResult<WebsocketStream> {
+        let url = self.inner.config.stream_base.clone();
+        WebsocketStream::connect(self.clone(), url).await
+    }
 }
 
-impl<R, S> GateRequest<R, S>
-where
-    R: Request,
-    S: GateSigner,
-{
-    pub fn now(self) -> GatePreparedRequest<R, S> {
+impl<R: Request, S> GateRequest<R, S> {
+    pub fn with_current_timestamp(self) -> GatePreparedRequest<R, S> {
         let Self {
             api_client,
             request,
@@ -162,8 +143,8 @@ where
             _phantom,
         } = self;
 
-        let timestamp = DtGate::now();
-        let request = request.append_header(("Timestamp", timestamp.header_timestamp()));
+        let timestamp = Utc::now().timestamp();
+        let request = request.append_header(("Timestamp", timestamp));
 
         GatePreparedRequest {
             api_client,
@@ -175,12 +156,7 @@ where
     }
 
     pub async fn call_unsigned(self) -> Result<R::Response, CallError> {
-        let Self {
-            api_client: _,
-            request,
-            body,
-            _phantom,
-        } = self;
+        let Self { request, body, .. } = self;
 
         let request_id = Uuid::new_v4();
 
@@ -211,11 +187,7 @@ where
     }
 }
 
-impl<R, S> GatePreparedRequest<R, S>
-where
-    R: Request,
-    S: GateSigner,
-{
+impl<R: Request + PrivateRequest, S: GateSigner> GatePreparedRequest<R, S> {
     pub async fn sign(self) -> Result<GateSignedRequest<R>, SignError> {
         let Self {
             api_client,
@@ -240,7 +212,7 @@ where
             log::debug!("headers: {:?}", request.headers());
             log::debug!("path: {:?}", request_path);
             log::debug!("query: {:?}", request_query);
-            log::debug!("timestamp: {:?}", timestamp.header_timestamp());
+            log::debug!("timestamp: {:?}", timestamp);
             log::debug!("body: {:?}", body);
         }
 
@@ -250,7 +222,7 @@ where
             request.get_uri().path_and_query(),
         );
 
-        let timestamp: SmartString = timestamp.header_timestamp().to_fmt();
+        let timestamp: SmartString = timestamp.to_fmt();
         log::debug!("timestamp: {:?}", timestamp.as_str());
 
         let signer = &api_client.inner.config.signer;
@@ -258,8 +230,8 @@ where
         let sign = signer
             .sign_api(
                 request_method,
-                &request_path,
-                &request_query,
+                request_path,
+                request_query,
                 &body,
                 &timestamp,
             )
@@ -279,10 +251,7 @@ where
     }
 }
 
-impl<R> GateSignedRequest<R>
-where
-    R: Request,
-{
+impl<R: Request> GateSignedRequest<R> {
     pub async fn call(self) -> Result<R::Response, CallError> {
         let Self {
             request,

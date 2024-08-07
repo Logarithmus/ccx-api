@@ -1,4 +1,4 @@
-use ccx_api_lib::GatepayApiCred;
+use ccx_gatepay::util::GatepayApiCred;
 use ccx_gatepay::GatepayApi;
 
 #[actix_rt::main]

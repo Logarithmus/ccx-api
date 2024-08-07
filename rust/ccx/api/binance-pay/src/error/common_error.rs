@@ -96,7 +96,9 @@ impl CommonBusinessError {
             Self::InvalidParamWrongLength => {
                 "A parameter was not valid, was empty/null, or too long/short, or wrong format."
             }
-            Self::InvalidParamWrongValue => "A parameter was not valid, the value is out of range.	",
+            Self::InvalidParamWrongValue => {
+                "A parameter was not valid, the value is out of range.	"
+            }
             Self::InvalidParamIllegalChar => {
                 "A parameter was not valid, contains illegal characters"
             }

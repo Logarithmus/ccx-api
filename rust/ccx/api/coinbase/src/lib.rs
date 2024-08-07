@@ -1,3 +1,5 @@
+#![allow(warnings)]
+
 extern crate core;
 
 pub mod api;
