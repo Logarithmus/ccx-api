@@ -31,6 +31,7 @@ url = { version = "2", features = ["serde"] }
 uuid = { version = "0.8", features = ["serde", "v4"] }
 
 ccx-api-lib = { path = "../../util/lib" }
+ref-cast = "1.0.23"
 
 [dev-dependencies]
 actix-rt = "2"

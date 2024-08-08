@@ -112,7 +112,7 @@ where
         make_client(false, self.inner.config.proxy.as_ref())
     }
 
-    pub fn prepare_rest<R: Request>(&self, request: &R) -> GateRequest<R, S> {
+    pub fn prepare_rest<R: Request>(&self, path: &str, request: &R) -> GateRequest<R, S> {
         let body = match R::METHOD {
             ApiMethod::Get | ApiMethod::Delete => "".to_string(),
             ApiMethod::Post | ApiMethod::Put => serde_json::to_string(request).unwrap(),
@@ -126,7 +126,7 @@ where
         let version = R::VERSION.as_str();
         let url_base = self.inner.config.api_base.as_str();
         let slash = if url_base.ends_with('/') { "" } else { "/" };
-        let url: SmartString<254> = format_args!("{url_base}{slash}{version}/{}", R::PATH).to_fmt();
+        let url: SmartString<254> = format_args!("{url_base}{slash}{version}{path}").to_fmt();
 
         let mut req = self
             .rest_client()
