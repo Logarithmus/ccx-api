@@ -12,7 +12,7 @@ with_network = [
 with_diesel = []
 
 [dependencies]
-chrono = { version = "0.4.31", default_features = false, features = ["clock"] }
+chrono = { version = "0.4.31", default-features = false, features = ["clock"] }
 derive_more = "0.99"
 log = "0.4"
 futures = "0.3"
@@ -32,6 +32,7 @@ uuid = { version = "0.8", features = ["serde", "v4"] }
 
 ccx-api-lib = { path = "../../util/lib" }
 ref-cast = "1.0.23"
+serde_with = { version = "3.9.0", features = ["chrono_0_4"] }
 
 [dev-dependencies]
 actix-rt = "2"

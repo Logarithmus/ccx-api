@@ -7,7 +7,12 @@ use crate::api::ApiVersion;
 pub trait Request: Serialize {
     const METHOD: ApiMethod;
     const VERSION: ApiVersion;
-    const IS_PUBLIC: bool;
 
     type Response: de::DeserializeOwned;
 }
+
+/// Request doesn't require signature
+pub trait PublicRequest: Request {}
+
+/// Request requires signature
+pub trait PrivateRequest: Request {}

@@ -24,5 +24,4 @@ pub use self::cred::*;
 pub use self::env::*;
 pub use self::error::*;
 pub use self::proxy::*;
-pub use self::rate_limiter::*;
 pub use self::seq::*;

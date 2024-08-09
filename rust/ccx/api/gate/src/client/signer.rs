@@ -63,7 +63,7 @@ impl GateSigner for GateApiCred {
 ///
 /// In APIv4, signature string is concatenated as the following way:
 ///
-/// ```ignore
+/// ```text
 /// Request Method + "\n" + Request URL + "\n" + Query String + "\n" + HexEncode(SHA512(Request Payload)) + "\n" + Timestamp`
 /// ```
 pub fn signature_string(

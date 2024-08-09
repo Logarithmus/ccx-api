@@ -5,6 +5,7 @@ use smart_string::SmartString;
 
 use crate::api::ApiMethod;
 use crate::api::ApiVersion;
+use crate::api::PrivateRequest;
 use crate::api::Request;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -15,10 +16,10 @@ pub struct WalletBalancesRequest {
 impl Request for WalletBalancesRequest {
     const METHOD: ApiMethod = ApiMethod::Get;
     const VERSION: ApiVersion = ApiVersion::V4;
-    const PATH: &'static str = "wallet/total_balance";
-    const IS_PUBLIC: bool = false;
     type Response = WalletBalancesResponse;
 }
+
+impl PrivateRequest for WalletBalancesRequest {}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WalletBalancesResponse {
@@ -57,11 +58,11 @@ pub struct WalletBalance {
 #[cfg(feature = "with_network")]
 mod with_network {
     use super::*;
+    use crate::api::wallet::WalletApi;
     use crate::client::rest::RequestError;
     use crate::client::signer::GateSigner;
-    use crate::GateApi;
 
-    impl<S: GateSigner> GateApi<S> {
+    impl<S: GateSigner> WalletApi<S> {
         /// # Retrieve user's total balances
         ///
         /// Retrieve user's total balances
@@ -82,11 +83,13 @@ mod with_network {
         ///
         /// * `currency` - Currency unit used to calculate the balance amount.
         ///    BTC, CNY, USD and USDT are allowed. USDT is the default.
-        pub async fn wallet_balances(
+        pub async fn total_balance(
             &self,
             currency: Option<SmartString>,
         ) -> Result<<WalletBalancesRequest as Request>::Response, RequestError> {
-            self.request(&WalletBalancesRequest { currency }).await
+            self.0
+                .signed_request("/wallet/total_balance", &WalletBalancesRequest { currency })
+                .await
         }
     }
 }

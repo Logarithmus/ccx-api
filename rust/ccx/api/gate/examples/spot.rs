@@ -9,7 +9,5 @@ async fn main() {
 
     let api = GateApi::<GateApiCred>::from_env();
 
-    dbg!(api.spot_tickers(None, None).await).unwrap();
-    // dbg!(api.spot_tickers(Some("BTC_USDT".to_fmt()), None).await).unwrap();
-    // dbg!(api.spot_accounts(None).await).unwrap();
+    dbg!(api.spot().tickers(&Default::default()).await).unwrap();
 }

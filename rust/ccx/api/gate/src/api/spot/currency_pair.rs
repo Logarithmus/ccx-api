@@ -1,54 +1,95 @@
-use rust_decimal::Decimal;
+use ccx_api_lib::{serde_util::none_as_empty_str, Decimal};
+use chrono::DateTime;
+use chrono::Utc;
 use serde::Deserialize;
 use serde::Serialize;
-use smallvec::SmallVec;
+use serde_with::{formats::Flexible, serde_as, TimestampSeconds};
 use smart_string::SmartString;
 
 use crate::api::ApiMethod;
 use crate::api::ApiVersion;
+use crate::api::PublicRequest;
 use crate::api::Request;
-use crate::util::dt_gate::DtGate;
-use crate::util::maybe_str;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct AllCurrencyPairsRequest;
+
+impl PublicRequest for AllCurrencyPairsRequest {}
 
 impl Request for AllCurrencyPairsRequest {
     const METHOD: ApiMethod = ApiMethod::Get;
     const VERSION: ApiVersion = ApiVersion::V4;
-    const IS_PUBLIC: bool = true;
     type Response = Vec<CurrencyPair>;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct CurrencyPairRequest;
 
 impl Request for CurrencyPairRequest {
     const METHOD: ApiMethod = ApiMethod::Get;
     const VERSION: ApiVersion = ApiVersion::V4;
-    const IS_PUBLIC: bool = true;
     type Response = CurrencyPair;
 }
 
-/// Represents the details of a currency.
-#[derive(Debug, Clone, Deserialize)]
+impl PublicRequest for CurrencyPairRequest {}
+
+/// Represents a spot currency pair.
+#[serde_as]
+#[derive(Debug, Deserialize)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct CurrencyPair {
-    /// Currency name
-    pub currency: SmartString,
-    /// Whether currency is de-listed
-    pub delisted: bool,
-    /// Whether currency's withdrawal is disabled
-    pub withdraw_disabled: bool,
-    /// Whether currency's withdrawal is delayed
-    pub withdraw_delayed: bool,
-    /// Whether currency's deposit is disabled
-    pub deposit_disabled: bool,
-    /// Whether currency's trading is disabled
-    pub trade_disabled: bool,
-    /// Fixed fee rate. Only for fixed rate currencies, not valid for normal currencies
-    pub fixed_rate: Option<SmartString>,
-    /// Chain of currency
-    pub chain: SmartString,
+    /// Currency pair identifier.
+    #[serde(with = "none_as_empty_str", default)]
+    pub id: Option<SmartString>,
+    /// Base currency of the pair.
+    #[serde(with = "none_as_empty_str", default)]
+    pub base: Option<SmartString>,
+    /// Quote currency of the pair.
+    #[serde(with = "none_as_empty_str", default)]
+    pub quote: Option<SmartString>,
+    /// Trading fee associated with the currency pair.
+    #[serde(with = "none_as_empty_str", default)]
+    pub fee: Option<Decimal>,
+    /// Minimum amount of base currency to trade, null means no limit.
+    #[serde(with = "none_as_empty_str", default)]
+    pub min_base_amount: Option<Decimal>,
+    /// Minimum amount of quote currency to trade, null means no limit.
+    #[serde(with = "none_as_empty_str", default)]
+    pub min_quote_amount: Option<Decimal>,
+    /// Maximum amount of base currency to trade, null means no limit.
+    #[serde(with = "none_as_empty_str", default)]
+    pub max_base_amount: Option<Decimal>,
+    /// Maximum amount of quote currency to trade, null means no limit.
+    #[serde(with = "none_as_empty_str", default)]
+    pub max_quote_amount: Option<Decimal>,
+    /// Amount scale precision.
+    pub amount_precision: Option<u32>,
+    /// Price scale precision.
+    pub precision: Option<u32>,
+    /// How the currency pair can be traded.
+    ///
+    /// More info in [TradeStatus]
+    pub trade_status: Option<TradeStatus>,
+    /// Sell start unix timestamp in seconds.
+    #[serde_as(as = "Option<TimestampSeconds<i64, Flexible>>")]
+    pub sell_start: Option<DateTime<Utc>>,
+    /// Buy start unix timestamp in seconds.
+    #[serde_as(as = "Option<TimestampSeconds<i64, Flexible>>")]
+    pub buy_start: Option<DateTime<Utc>>,
+}
+
+/// How currency pair can be traded
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TradeStatus {
+    /// Can be bought or sold
+    Tradable,
+    /// Cannot be bought or sold
+    Untradable,
+    /// Can be bought
+    Buyable,
+    /// Can be sold
+    Sellable,
 }
 
 #[cfg(feature = "with_network")]
@@ -59,64 +100,79 @@ mod with_network {
     use crate::client::signer::GateSigner;
 
     impl<S: GateSigner> SpotApi<S> {
-        /// List all currencies' details
+        /// List all currency pairs supported by the API.
         ///
-        /// `GET /spot/currencies`
+        /// # Endpoint
+        /// `GET /spot/currency_pairs`
         ///
-        /// Currency has two forms:
-        /// * Only currency name, e.g., `BTC`, `USDT`
-        /// * `<currency>_<chain>`, e.g., `HT_ETH`
-        ///
-        /// ## Parameters
-        /// None
-        pub async fn all_currencies(
-            &self,
-        ) -> Result<AllCurrencyPairsRequest::Response, RequestError> {
-            self.request("/spot/currencies", &AllCurrencyPairsRequest)
-                .await
+        /// # Description
+        /// This endpoint retrieves a list of all currency pairs that are supported.
+        pub async fn all_currency_pairs(&self) -> Result<Vec<CurrencyPair>, RequestError> {
+            let request = &AllCurrencyPairsRequest;
+            self.0.request("/spot/currency_pairs", request).await
         }
 
-        /// Get details of a specific currency
+        /// Get details of a specific currency pair.
         ///
-        /// `GET /spot/currencies/{name}`
+        /// # Endpoint
+        /// `GET /spot/currency_pairs/{currency_pair}`
         ///
-        /// Get details of a specific currency
-        pub async fn currency(
+        /// # Description
+        /// This endpoint retrieves detailed information about a specific currency pair.
+        ///
+        /// # Parameters
+        /// - `currency_pair`: The currency pair to retrieve details for.  
+        pub async fn currency_pair(
             &self,
-            name: &str,
-        ) -> Result<CurrencyPairRequest::Response, RequestError> {
-            self.request(format!("/spot/currencies/{name}"), &CurrencyPairRequest)
-                .await
+            currency_pair: &str,
+        ) -> Result<CurrencyPair, RequestError> {
+            let path = format!("/spot/currency_pairs/{currency_pair}");
+            self.0.request(&path, &CurrencyPairRequest).await
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use rust_decimal_macros::dec;
 
+    use super::*;
+
     #[test]
-    fn deserialize_currency() {
+    fn deserialize_currency_pair() {
         let json = r#"{
-     "currency": "GT",
-     "delisted": false,
-     "withdraw_disabled": false,
-     "withdraw_delayed": false,
-     "deposit_disabled": false,
-     "trade_disabled": false,
-     "chain": "GT"
-  }"#;
+            "id": "ETH_USDT",
+            "base": "ETH",
+            "quote": "USDT",
+            "fee": "0.2",
+            "min_base_amount": "0.001",
+            "min_quote_amount": "1.0",
+            "max_base_amount": "10000",
+            "max_quote_amount": "10000000",
+            "amount_precision": 3,
+            "precision": 6,
+            "trade_status": "tradable",
+            "sell_start": 1516378650,
+            "buy_start": 1516378650
+        }"#;
+
         let expected = CurrencyPair {
-            currency: "GT",
-            delisted: false,
-            withdraw_disabled: false,
-            withdraw_delayed: false,
-            deposit_disabled: false,
-            trade_disabled: false,
-            fixed_rate: None,
-            chain: "GT",
+            id: Some("ETH_USDT".into()),
+            base: Some("ETH".into()),
+            quote: Some("USDT".into()),
+            fee: Some(dec!(0.2)),
+            min_base_amount: Some(dec!(0.001)),
+            min_quote_amount: Some(dec!(1.0)),
+            max_base_amount: Some(dec!(10000)),
+            max_quote_amount: Some(dec!(10000000)),
+            amount_precision: Some(3),
+            precision: Some(6),
+            trade_status: Some(TradeStatus::Tradable),
+            sell_start: DateTime::from_timestamp(1516378650, 0),
+            buy_start: DateTime::from_timestamp(1516378650, 0),
         };
-        assert_eq!(serde_json::from_str(json).unwrap().as_slice(), expected);
+
+        let actual: CurrencyPair = serde_json::from_str(json).unwrap();
+        assert_eq!(actual, expected);
     }
 }

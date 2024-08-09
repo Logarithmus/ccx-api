@@ -3,13 +3,11 @@ pub use ccx_api_lib::PrimeApiCred;
 pub use ccx_api_lib::Proxy;
 use url::Url;
 
-use crate::client::signer::GateSigner;
-
 pub static CCX_GATE_API_PREFIX: &str = "CCX_GATE_API";
 
 /// API config.
 #[derive(Clone)]
-pub struct GateApiConfig<S: GateSigner> {
+pub struct GateApiConfig<S> {
     pub signer: S,
     pub api_base: Url,
     // pub stream_base: Url,
@@ -17,10 +15,7 @@ pub struct GateApiConfig<S: GateSigner> {
     // pub tier: RateLimiterTier,
 }
 
-impl<S> GateApiConfig<S>
-where
-    S: GateSigner,
-{
+impl<S> GateApiConfig<S> {
     pub fn new(
         signer: S,
         api_base: Url,

@@ -1,37 +1,38 @@
-use rust_decimal::Decimal;
-use serde::Deserialize;
-use serde::Serialize;
-use smallvec::SmallVec;
-use smart_string::SmartString;
-
 use crate::api::ApiMethod;
 use crate::api::ApiVersion;
+use crate::api::PublicRequest;
 use crate::api::Request;
-use crate::util::dt_gate::DtGate;
-use crate::util::maybe_str;
 
-#[derive(Debug, Clone)]
+use ccx_api_lib::Decimal;
+use serde::Deserialize;
+use serde::Serialize;
+use smart_string::SmartString;
+
+#[derive(Debug, Clone, Serialize)]
 pub struct AllCurrenciesRequest;
 
 impl Request for AllCurrenciesRequest {
     const METHOD: ApiMethod = ApiMethod::Get;
     const VERSION: ApiVersion = ApiVersion::V4;
-    const IS_PUBLIC: bool = true;
     type Response = Vec<Currency>;
 }
 
-#[derive(Debug, Clone)]
+impl PublicRequest for AllCurrenciesRequest {}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct CurrencyRequest;
 
 impl Request for CurrencyRequest {
     const METHOD: ApiMethod = ApiMethod::Get;
     const VERSION: ApiVersion = ApiVersion::V4;
-    const IS_PUBLIC: bool = true;
     type Response = Currency;
 }
 
+impl PublicRequest for CurrencyRequest {}
+
 /// Represents the details of a currency.
 #[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Currency {
     /// Currency name
     pub currency: SmartString,
@@ -46,7 +47,7 @@ pub struct Currency {
     /// Whether currency's trading is disabled
     pub trade_disabled: bool,
     /// Fixed fee rate. Only for fixed rate currencies, not valid for normal currencies
-    pub fixed_rate: Option<SmartString>,
+    pub fixed_rate: Option<Decimal>,
     /// Chain of currency
     pub chain: SmartString,
 }
@@ -69,9 +70,9 @@ mod with_network {
         ///
         /// ## Parameters
         /// None
-        pub async fn all_currencies(&self) -> Result<AllCurrenciesRequest::Response, RequestError> {
-            self.request("/spot/currencies", &AllCurrenciesRequest)
-                .await
+        pub async fn all_currencies(&self) -> Result<Vec<Currency>, RequestError> {
+            let request = AllCurrenciesRequest;
+            self.0.request("/spot/currencies", &request).await
         }
 
         /// Get details of a specific currency
@@ -79,12 +80,11 @@ mod with_network {
         /// `GET /spot/currencies/{name}`
         ///
         /// Get details of a specific currency
-        pub async fn currency(
-            &self,
-            name: &str,
-        ) -> Result<CurrencyRequest::Response, RequestError> {
-            self.request(format!("/spot/currencies/{name}"), &CurrencyRequest)
-                .await
+        /// ## Parameters
+        /// * `currency`
+        pub async fn currency(&self, currency: &str) -> Result<Currency, RequestError> {
+            let path = format!("/spot/currencies/{currency}");
+            self.0.request(&path, &CurrencyRequest).await
         }
     }
 }
@@ -92,7 +92,6 @@ mod with_network {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rust_decimal_macros::dec;
 
     #[test]
     fn deserialize_currency() {
@@ -106,15 +105,15 @@ mod tests {
      "chain": "GT"
   }"#;
         let expected = Currency {
-            currency: "GT",
+            currency: "GT".into(),
             delisted: false,
             withdraw_disabled: false,
             withdraw_delayed: false,
             deposit_disabled: false,
             trade_disabled: false,
             fixed_rate: None,
-            chain: "GT",
+            chain: "GT".into(),
         };
-        assert_eq!(serde_json::from_str(json).unwrap().as_slice(), expected);
+        assert_eq!(serde_json::from_str::<Currency>(json).unwrap(), expected);
     }
 }

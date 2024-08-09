@@ -20,27 +20,24 @@ pub use with_network::*;
 mod with_network {
     use ccx_api_lib::GateApiCred;
     use ccx_api_lib::Proxy;
+    use ref_cast::RefCast;
     use spot::SpotApi;
+    use wallet::WalletApi;
+    use withdrawal::WithdrawalApi;
 
     pub use super::*;
     use crate::client::config::GateApiConfig;
     use crate::client::config::CCX_GATE_API_PREFIX;
     use crate::client::rest::GateRestClient;
     use crate::client::rest::RequestError;
-    use crate::client::signer::GateSigner;
+    use crate::client::GateSigner;
 
     #[derive(Clone)]
-    pub struct GateApi<S>
-    where
-        S: GateSigner,
-    {
+    pub struct GateApi<S> {
         pub client: GateRestClient<S>,
     }
 
-    impl<S> GateApi<S>
-    where
-        S: GateSigner,
-    {
+    impl<S> GateApi<S> {
         pub fn new(signer: S, proxy: Option<Proxy>) -> GateApi<S> {
             let api_base = API_BASE.parse().unwrap();
             GateApi::with_config(GateApiConfig::new(signer, api_base, proxy))
@@ -65,23 +62,48 @@ mod with_network {
             GateApi { client }
         }
 
-        pub async fn request<R: Request>(
+        /// Unsigned request. For signed see [Self::signed_request]
+        pub async fn request<R: PublicRequest>(
             &self,
             path: &str,
             request: &R,
         ) -> Result<R::Response, RequestError> {
-            let resp = if R::IS_PUBLIC {
-                self.client.prepare_rest(path, request).call_unsigned().await?
-            } else {
-                let signed = self.client.prepare_rest(path, request).now().sign().await?;
-                signed.call().await?
-            };
-            Ok(resp)
+            Ok(self
+                .client
+                .prepare_rest(path, request)
+                .call_unsigned()
+                .await?)
         }
 
         /// Spot trading
         pub fn spot(&self) -> &SpotApi<S> {
-            SpotApi::ref_cast(&self)
+            RefCast::ref_cast(self)
+        }
+
+        /// Wallet operations
+        pub fn wallet(&self) -> &WalletApi<S> {
+            RefCast::ref_cast(self)
+        }
+
+        /// Withdrawal operations
+        pub fn withdrawal(&self) -> &WithdrawalApi<S> {
+            RefCast::ref_cast(self)
+        }
+    }
+
+    impl<S: GateSigner> GateApi<S> {
+        pub async fn signed_request<R: PrivateRequest>(
+            &self,
+            path: &str,
+            request: &R,
+        ) -> Result<R::Response, RequestError> {
+            let signed = self
+                .client
+                .prepare_rest(path, request)
+                .with_current_timestamp()
+                .sign()
+                .await?;
+            Ok(signed.call().await?)
         }
     }
 }

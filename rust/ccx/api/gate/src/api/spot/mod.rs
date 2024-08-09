@@ -9,10 +9,9 @@ pub use currency_pair::*;
 pub use tickers::*;
 
 use super::GateApi;
-use crate::client::GateSigner;
 use ref_cast::RefCast;
 
 /// Spot trading
-#[derive(RefCast)]
+#[derive(RefCast, Clone)]
 #[repr(transparent)]
 pub struct SpotApi<S>(GateApi<S>);

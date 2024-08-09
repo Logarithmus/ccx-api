@@ -7,6 +7,7 @@ use ccx_api_lib::ClientRequest;
 use ccx_api_lib::Method;
 use ccx_api_lib::PayloadError;
 use ccx_api_lib::SendRequestError;
+use chrono::Utc;
 use smart_string::DisplayExt;
 use smart_string::SmartString;
 use thiserror::Error;
@@ -14,11 +15,11 @@ use uuid::Uuid;
 
 use crate::api::ApiMethod;
 use crate::api::GateApiError;
+use crate::api::PrivateRequest;
 use crate::api::Request;
 use crate::client::config::GateApiConfig;
 use crate::client::signer::GateSigner;
 use crate::client::signer::SignError;
-use crate::util::dt_gate::DtGate;
 
 #[derive(Debug, Error)]
 pub enum CallError {
@@ -41,17 +42,11 @@ pub enum RequestError {
 }
 
 /// API client.
-pub struct GateRestClient<S>
-where
-    S: GateSigner,
-{
+pub struct GateRestClient<S> {
     inner: Arc<ClientInner<S>>,
 }
 
-impl<S> Clone for GateRestClient<S>
-where
-    S: GateSigner,
-{
+impl<S> Clone for GateRestClient<S> {
     fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
@@ -59,50 +54,33 @@ where
     }
 }
 
-struct ClientInner<S>
-where
-    S: GateSigner,
-{
+struct ClientInner<S> {
     config: GateApiConfig<S>,
 }
 
-pub struct GateRequest<R, S>
-where
-    R: Request,
-    S: GateSigner,
-{
+pub struct GateRequest<R, S> {
     api_client: GateRestClient<S>,
     request: ClientRequest,
     body: String,
     _phantom: std::marker::PhantomData<R>,
 }
 
-pub struct GatePreparedRequest<R, S>
-where
-    R: Request,
-    S: GateSigner,
-{
+pub struct GatePreparedRequest<R, S> {
     api_client: GateRestClient<S>,
     request: ClientRequest,
     body: String,
-    timestamp: DtGate,
+    timestamp: i64,
     // query: SmartString<254>,
     _phantom: std::marker::PhantomData<R>,
 }
 
-pub struct GateSignedRequest<R>
-where
-    R: Request,
-{
+pub struct GateSignedRequest<R> {
     request: ClientRequest,
     body: String,
     _phantom: std::marker::PhantomData<R>,
 }
 
-impl<S> GateRestClient<S>
-where
-    S: GateSigner,
-{
+impl<S> GateRestClient<S> {
     pub fn new(config: GateApiConfig<S>) -> Self {
         let inner = Arc::new(ClientInner { config });
         Self { inner }
@@ -149,12 +127,8 @@ where
     }
 }
 
-impl<R, S> GateRequest<R, S>
-where
-    R: Request,
-    S: GateSigner,
-{
-    pub fn now(self) -> GatePreparedRequest<R, S> {
+impl<R: Request, S> GateRequest<R, S> {
+    pub fn with_current_timestamp(self) -> GatePreparedRequest<R, S> {
         let Self {
             api_client,
             request,
@@ -162,8 +136,8 @@ where
             _phantom,
         } = self;
 
-        let timestamp = DtGate::now();
-        let request = request.append_header(("Timestamp", timestamp.header_timestamp()));
+        let timestamp = Utc::now().timestamp();
+        let request = request.append_header(("Timestamp", timestamp));
 
         GatePreparedRequest {
             api_client,
@@ -211,11 +185,7 @@ where
     }
 }
 
-impl<R, S> GatePreparedRequest<R, S>
-where
-    R: Request,
-    S: GateSigner,
-{
+impl<R: Request + PrivateRequest, S: GateSigner> GatePreparedRequest<R, S> {
     pub async fn sign(self) -> Result<GateSignedRequest<R>, SignError> {
         let Self {
             api_client,
@@ -240,7 +210,7 @@ where
             log::debug!("headers: {:?}", request.headers());
             log::debug!("path: {:?}", request_path);
             log::debug!("query: {:?}", request_query);
-            log::debug!("timestamp: {:?}", timestamp.header_timestamp());
+            log::debug!("timestamp: {:?}", timestamp);
             log::debug!("body: {:?}", body);
         }
 
@@ -250,7 +220,7 @@ where
             request.get_uri().path_and_query(),
         );
 
-        let timestamp: SmartString = timestamp.header_timestamp().to_fmt();
+        let timestamp: SmartString = timestamp.to_fmt();
         log::debug!("timestamp: {:?}", timestamp.as_str());
 
         let signer = &api_client.inner.config.signer;
@@ -279,10 +249,7 @@ where
     }
 }
 
-impl<R> GateSignedRequest<R>
-where
-    R: Request,
-{
+impl<R: Request> GateSignedRequest<R> {
     pub async fn call(self) -> Result<R::Response, CallError> {
         let Self {
             request,

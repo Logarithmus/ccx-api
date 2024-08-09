@@ -1,49 +1,58 @@
+use chrono::DateTime;
+use chrono::Utc;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_with::formats::Flexible;
+use serde_with::serde_as;
+use serde_with::skip_serializing_none;
+use serde_with::TimestampSeconds;
 use smart_string::SmartString;
 
 use crate::api::withdrawal::WithdrawalWithdrawStatus;
 use crate::api::ApiMethod;
 use crate::api::ApiVersion;
+use crate::api::PrivateRequest;
 use crate::api::Request;
-use crate::util::dt_gate::DtGate;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde_as]
+#[skip_serializing_none]
+#[derive(Debug, Clone, PartialEq, Serialize, Default)]
 pub struct WalletWithdrawalHistoryRequest {
     /// Filter by currency. Return all currency records if not specified
     pub currency: Option<SmartString>,
     /// Time range beginning, default to 7 days before current time
-    pub from: Option<DtGate>,
+    #[serde_as(as = "Option<TimestampSeconds<i64>>")]
+    pub from: Option<DateTime<Utc>>,
     /// Time range ending, default to current time
-    pub to: Option<DtGate>,
+    #[serde_as(as = "Option<TimestampSeconds<i64>>")]
+    pub to: Option<DateTime<Utc>>,
     /// Maximum number of records to be returned in a single list
-    pub limit: Option<i64>,
+    pub limit: Option<u64>,
     /// List offset, starting from 0
-    pub offset: Option<i64>,
+    pub offset: Option<u64>,
 }
 
 impl Request for WalletWithdrawalHistoryRequest {
     const METHOD: ApiMethod = ApiMethod::Get;
     const VERSION: ApiVersion = ApiVersion::V4;
-    const PATH: &'static str = "wallet/withdrawals";
-    const IS_PUBLIC: bool = false;
     type Response = Vec<WalletWithdrawalHistoryResponse>;
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+impl PrivateRequest for WalletWithdrawalHistoryRequest {}
+
+#[serde_as]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct WalletWithdrawalHistoryResponse {
     /// Record ID
     pub id: SmartString,
     /// Hash record of the withdrawal
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub txid: Option<SmartString<64>>,
     /// Client order id, up to 32 length and can only include 0-9, A-Z, a-z, underscore(_), hyphen(-) or dot(.)
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub withdraw_order_id: Option<SmartString<32>>,
     /// Operation time
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub timestamp: Option<DtGate>,
+    #[serde_as(as = "Option<TimestampSeconds<i64, Flexible>>")]
+    pub timestamp: Option<DateTime<Utc>>,
     /// Currency amount
     pub amount: Decimal,
     /// fee
@@ -53,7 +62,6 @@ pub struct WalletWithdrawalHistoryResponse {
     /// Withdrawal address. Required for withdrawals
     pub address: SmartString<66>,
     /// Additional remarks with regards to the withdrawal
-    #[serde(default)]
     pub memo: Option<SmartString>,
     /// Record status.
     pub status: WithdrawalWithdrawStatus,
@@ -64,11 +72,11 @@ pub struct WalletWithdrawalHistoryResponse {
 #[cfg(feature = "with_network")]
 mod with_network {
     use super::*;
+    use crate::api::wallet::WalletApi;
     use crate::client::rest::RequestError;
     use crate::client::signer::GateSigner;
-    use crate::GateApi;
 
-    impl<S: GateSigner> GateApi<S> {
+    impl<S: GateSigner> WalletApi<S> {
         /// # Retrieve withdrawal records
         ///
         /// Retrieve withdrawal records
@@ -81,22 +89,11 @@ mod with_network {
         /// * `to` - Time range ending, default to current time
         /// * `limit` - Maximum number of records to be returned in a single list
         /// * `offset` - List offset, starting from 0
-        pub async fn wallet_withdrawal_history(
+        pub async fn withdrawals(
             &self,
-            currency: Option<SmartString>,
-            from: Option<DtGate>,
-            to: Option<DtGate>,
-            limit: Option<i64>,
-            offset: Option<i64>,
+            request: &WalletWithdrawalHistoryRequest,
         ) -> Result<<WalletWithdrawalHistoryRequest as Request>::Response, RequestError> {
-            self.request(&WalletWithdrawalHistoryRequest {
-                currency,
-                from,
-                to,
-                limit,
-                offset,
-            })
-            .await
+            self.0.signed_request("/wallet/withdrawals", request).await
         }
     }
 }
@@ -129,7 +126,7 @@ mod tests {
             res,
             vec![WalletWithdrawalHistoryResponse {
                 id: "210496".into(),
-                timestamp: Some(DtGate::from_timestamp(1542000000)),
+                timestamp: DateTime::from_timestamp(1542000000, 0),
                 withdraw_order_id: Some("order_123456".into()),
                 currency: "USDT".into(),
                 address: "1HkxtBAMrA3tP5ENnYY2CZortjZvFDH5Cs".into(),
