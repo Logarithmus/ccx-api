@@ -31,7 +31,7 @@ pub enum Timezone {
     All,
 }
 
-impl<'a> Request for SpotTickersRequest {
+impl Request for SpotTickersRequest {
     const METHOD: ApiMethod = ApiMethod::Get;
     const VERSION: ApiVersion = ApiVersion::V4;
     type Response = SmallVec<[SpotTicker; 1]>;

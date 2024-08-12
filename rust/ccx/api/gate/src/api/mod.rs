@@ -12,6 +12,7 @@ pub use request::*;
 pub use version::*;
 
 pub const API_BASE: &str = "https://api.gateio.ws/api/";
+pub const STREAM_BASE: &str = "wss://api.gateio.ws/ws/";
 
 #[cfg(feature = "with_network")]
 pub use with_network::*;
@@ -28,19 +29,20 @@ mod with_network {
     pub use super::*;
     use crate::client::config::GateApiConfig;
     use crate::client::config::CCX_GATE_API_PREFIX;
-    use crate::client::rest::GateRestClient;
+    use crate::client::rest::RestClient;
     use crate::client::rest::RequestError;
     use crate::client::GateSigner;
 
     #[derive(Clone)]
     pub struct GateApi<S> {
-        pub client: GateRestClient<S>,
+        pub client: RestClient<S>,
     }
 
     impl<S> GateApi<S> {
         pub fn new(signer: S, proxy: Option<Proxy>) -> GateApi<S> {
             let api_base = API_BASE.parse().unwrap();
-            GateApi::with_config(GateApiConfig::new(signer, api_base, proxy))
+            let stream_base = STREAM_BASE.parse().unwrap();
+            GateApi::with_config(GateApiConfig::new(signer, api_base, stream_base, proxy))
         }
 
         pub fn from_env() -> GateApi<GateApiCred> {
@@ -58,7 +60,7 @@ mod with_network {
         }
 
         pub fn with_config(config: GateApiConfig<S>) -> GateApi<S> {
-            let client = GateRestClient::new(config);
+            let client = RestClient::new(config);
             GateApi { client }
         }
 

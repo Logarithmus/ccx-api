@@ -1,8 +1,7 @@
+use ccx_api_lib::Atom;
 use serde::{Deserialize, Serialize};
 
-use crate::util::OrderBook;
-use crate::util::OrderLevel;
-use crate::Atom;
+use super::order_book::{OrderBook, OrderLevel};
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct OrderBookSnap {

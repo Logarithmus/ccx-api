@@ -7,3 +7,4 @@ pub mod websocket;
 // pub use nonce::Nonce;
 pub use signer::GateApiCred;
 pub use signer::GateSigner;
+pub use rest::RestClient;

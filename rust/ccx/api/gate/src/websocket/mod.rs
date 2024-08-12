@@ -9,6 +9,7 @@ mod pong;
 mod subscription_status;
 mod system_status;
 mod trade;
+mod order_book;
 
 pub use heartbeat::*;
 pub use orderbook_diff::*;

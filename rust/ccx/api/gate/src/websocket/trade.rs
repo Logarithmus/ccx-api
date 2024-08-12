@@ -1,7 +1,5 @@
-use ccx_api_lib::Decimal;
+use ccx_api_lib::{Atom, Decimal};
 use serde::{Deserialize, Serialize};
-
-use crate::Atom;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Trade {

@@ -1,7 +1,7 @@
+use ccx_api_lib::Atom;
 use serde::{Deserialize, Serialize};
 
-use crate::util::OrderLevel;
-use string_cache::Atom;
+use super::order_book::OrderLevel;
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct OrderBookDiff {

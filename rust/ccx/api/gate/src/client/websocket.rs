@@ -1,5 +1,6 @@
 use std::io;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use std::time::Instant;
 
 use actix::io::SinkWrite;
 use actix::prelude::*;
@@ -7,15 +8,16 @@ use actix_codec::Framed;
 use actix_http::ws::Codec;
 use actix_web_actors::ws;
 use awc::BoxedSocket;
+use ccx_api_lib::Seq;
 use futures::channel::mpsc;
 use futures::stream::SplitSink;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 use url::Url;
 
-use ccx_api_lib::Seq;
-
-use crate::client::{KrakenSigner, RestClient};
-use crate::error::{KrakenError, KrakenResult};
+use crate::client::RestClient;
+use crate::error::GateError;
+use crate::error::GateResult;
 use crate::websocket::UpstreamApiRequest;
 use crate::websocket::UpstreamWebsocketMessage;
 use crate::websocket::WsCommand;
@@ -51,7 +53,7 @@ impl Actor for Websocket {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-        self.hb(ctx);
+        self.start_heartbeat_task(ctx);
     }
 }
 
@@ -157,7 +159,7 @@ impl Websocket {
     /// helper method that sends ping to client every second.
     ///
     /// also this method checks heartbeats from client
-    fn hb(&mut self, ctx: &mut <Self as Actor>::Context) {
+    fn start_heartbeat_task(&mut self, ctx: &mut <Self as Actor>::Context) {
         ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
                 log::warn!("Websocket client heartbeat failed, disconnecting!");
@@ -173,10 +175,7 @@ impl Websocket {
 }
 
 impl WebsocketStream {
-    pub async fn connect<S: KrakenSigner>(
-        api_client: RestClient<S>,
-        url: Url,
-    ) -> KrakenResult<Self> {
+    pub async fn connect<S>(api_client: RestClient<S>, url: Url) -> GateResult<Self> {
         use futures::StreamExt;
         log::debug!("Connecting WS: {}", url.as_str());
 
@@ -213,11 +212,11 @@ impl std::ops::Deref for WebsocketStream {
 }
 
 impl WebsocketStreamTx {
-    pub async fn subscribe(&self, subscription: impl Into<WsSubscription>) -> KrakenResult<()> {
+    pub async fn subscribe(&self, subscription: impl Into<WsSubscription>) -> GateResult<()> {
         let cmd = WsCommand::Subscribe(subscription.into());
         self.addr
             .send(M(cmd))
             .await
-            .map_err(|_e| KrakenError::IoError(io::ErrorKind::ConnectionAborted.into()))
+            .map_err(|_e| GateError::IoError(io::ErrorKind::ConnectionAborted.into()))
     }
 }

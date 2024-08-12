@@ -1,3 +1,5 @@
+#![allow(warnings)]
+
 pub mod api;
 #[cfg(feature = "with_network")]
 pub mod client;

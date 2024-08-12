@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use ccx_api_lib::make_client;
-use ccx_api_lib::Client;
 use ccx_api_lib::ClientRequest;
 use ccx_api_lib::Method;
 use ccx_api_lib::PayloadError;
@@ -20,6 +19,9 @@ use crate::api::Request;
 use crate::client::config::GateApiConfig;
 use crate::client::signer::GateSigner;
 use crate::client::signer::SignError;
+use crate::error::GateResult;
+
+use super::websocket::WebsocketStream;
 
 #[derive(Debug, Error)]
 pub enum CallError {
@@ -42,11 +44,11 @@ pub enum RequestError {
 }
 
 /// API client.
-pub struct GateRestClient<S> {
+pub struct RestClient<S> {
     inner: Arc<ClientInner<S>>,
 }
 
-impl<S> Clone for GateRestClient<S> {
+impl<S> Clone for RestClient<S> {
     fn clone(&self) -> Self {
         Self {
             inner: self.inner.clone(),
@@ -59,14 +61,14 @@ struct ClientInner<S> {
 }
 
 pub struct GateRequest<R, S> {
-    api_client: GateRestClient<S>,
+    api_client: RestClient<S>,
     request: ClientRequest,
     body: String,
     _phantom: std::marker::PhantomData<R>,
 }
 
 pub struct GatePreparedRequest<R, S> {
-    api_client: GateRestClient<S>,
+    api_client: RestClient<S>,
     request: ClientRequest,
     body: String,
     timestamp: i64,
@@ -80,13 +82,14 @@ pub struct GateSignedRequest<R> {
     _phantom: std::marker::PhantomData<R>,
 }
 
-impl<S> GateRestClient<S> {
+impl<S> RestClient<S> {
     pub fn new(config: GateApiConfig<S>) -> Self {
         let inner = Arc::new(ClientInner { config });
         Self { inner }
     }
 
-    pub(super) fn rest_client(&self) -> Client {
+    /// REST and Websocket client from `awc` crate
+    pub(super) fn client(&self) -> awc::Client {
         make_client(false, self.inner.config.proxy.as_ref())
     }
 
@@ -107,7 +110,7 @@ impl<S> GateRestClient<S> {
         let url: SmartString<254> = format_args!("{url_base}{slash}{version}{path}").to_fmt();
 
         let mut req = self
-            .rest_client()
+            .client()
             .request(method, url.as_str())
             .append_header(("Accept", "application/json"))
             .append_header(("Content-Type", "application/json"));
@@ -124,6 +127,11 @@ impl<S> GateRestClient<S> {
             body,
             _phantom: std::marker::PhantomData,
         }
+    }
+
+    pub async fn web_socket(&self) -> GateResult<WebsocketStream> {
+        let url = self.inner.config.stream_base.clone();
+        WebsocketStream::connect(self.clone(), url).await
     }
 }
 
@@ -228,8 +236,8 @@ impl<R: Request + PrivateRequest, S: GateSigner> GatePreparedRequest<R, S> {
         let sign = signer
             .sign_api(
                 request_method,
-                &request_path,
-                &request_query,
+                request_path,
+                request_query,
                 &body,
                 &timestamp,
             )

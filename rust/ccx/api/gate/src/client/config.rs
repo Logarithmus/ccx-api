@@ -10,7 +10,7 @@ pub static CCX_GATE_API_PREFIX: &str = "CCX_GATE_API";
 pub struct GateApiConfig<S> {
     pub signer: S,
     pub api_base: Url,
-    // pub stream_base: Url,
+    pub stream_base: Url,
     pub proxy: Option<Proxy>,
     // pub tier: RateLimiterTier,
 }
@@ -19,14 +19,14 @@ impl<S> GateApiConfig<S> {
     pub fn new(
         signer: S,
         api_base: Url,
-        // stream_base: Url,
+        stream_base: Url,
         proxy: Option<Proxy>,
         // tier: RateLimiterTier,
     ) -> Self {
         GateApiConfig {
             signer,
             api_base,
-            // stream_base,
+            stream_base,
             proxy,
             // tier,
         }

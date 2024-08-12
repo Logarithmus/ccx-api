@@ -1,6 +1,5 @@
+use ccx_api_lib::Atom;
 use serde::{Deserialize, Serialize};
-
-use crate::Atom;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct SubscriptionStatus {
@@ -46,14 +45,11 @@ mod tests {
         let resp: UpstreamWebsocketMessage<WsEvent> = serde_json::from_str(input).unwrap();
 
         match resp {
-            UpstreamWebsocketMessage::Response(e) => match e.payload {
-                UpstreamWebsocketResult::Ok(WsEvent::SubscriptionStatus(ss)) => {
-                    assert_eq!(e.event, "subscriptionStatus");
+            UpstreamWebsocketMessage::Response(e) => if let UpstreamWebsocketResult::Ok(WsEvent::SubscriptionStatus(ss)) = e.payload {
+                assert_eq!(e.event, "subscriptionStatus");
 
-                    assert_eq!(ss.channel_id, Some(2288));
-                    assert_eq!(ss.subscription.name, "book");
-                }
-                _ => {}
+                assert_eq!(ss.channel_id, Some(2288));
+                assert_eq!(ss.subscription.name, "book");
             },
             _ => unreachable!(),
         }

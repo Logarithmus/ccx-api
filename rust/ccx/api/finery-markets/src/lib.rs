@@ -1,3 +1,4 @@
+#![allow(warnings)]
 #![allow(dead_code)]
 
 #[macro_use]
