@@ -1,7 +1,9 @@
 use ccx_api_lib::Atom;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
-use super::order_book::{OrderBook, OrderLevel};
+use super::order_book::OrderBook;
+use super::order_book::OrderLevel;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct OrderBookSnap {
@@ -30,9 +32,9 @@ pub struct OrderBookSnapPayload {
 
 #[cfg(test)]
 mod tests {
-    use super::super::*;
-
     use rust_decimal::Decimal;
+
+    use super::super::*;
 
     #[test]
     fn test_decode_snap_order_book_event() {

@@ -2,11 +2,12 @@ use std::future::Future;
 use std::io;
 use std::pin::Pin;
 
-pub use ccx_api_lib::GateApiCred;
 use hex::ToHex;
 use sha2::Digest;
 use smart_string::SmartString;
 use thiserror::Error;
+
+use crate::util::GateApiCred;
 
 pub type ApiSignResult<'a> =
     Pin<Box<dyn Future<Output = Result<SmartString<128>, SignError>> + Send + 'a>>;

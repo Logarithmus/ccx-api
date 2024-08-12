@@ -1,15 +1,16 @@
 use ccx_api_lib::string_cache;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 use string_cache::DefaultAtom as Atom;
 
 mod heartbeat;
+mod order_book;
 mod orderbook_diff;
 mod orderbook_snap;
 mod pong;
 mod subscription_status;
 mod system_status;
 mod trade;
-mod order_book;
 
 pub use heartbeat::*;
 pub use orderbook_diff::*;

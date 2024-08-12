@@ -1,4 +1,3 @@
-
 pub use ccx_api_lib::*;
 
 use crate::api::GateApiError;

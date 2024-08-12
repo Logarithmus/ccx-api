@@ -19,7 +19,6 @@ pub use with_network::*;
 
 #[cfg(feature = "with_network")]
 mod with_network {
-    use ccx_api_lib::GateApiCred;
     use ccx_api_lib::Proxy;
     use ref_cast::RefCast;
     use spot::SpotApi;
@@ -29,9 +28,10 @@ mod with_network {
     pub use super::*;
     use crate::client::config::GateApiConfig;
     use crate::client::config::CCX_GATE_API_PREFIX;
-    use crate::client::rest::RestClient;
     use crate::client::rest::RequestError;
+    use crate::client::rest::RestClient;
     use crate::client::GateSigner;
+    use crate::util::GateApiCred;
 
     #[derive(Clone)]
     pub struct GateApi<S> {

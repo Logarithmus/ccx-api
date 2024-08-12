@@ -2,14 +2,14 @@ use std::future::Future;
 use std::io;
 use std::pin::Pin;
 
-pub use ccx_api_lib::GatepayApiCred;
-pub use ccx_api_lib::GatepayNotificationCred;
 use smart_string::DisplayExt;
 use smart_string::SmartString;
 use thiserror::Error;
 
 use crate::client::nonce::Nonce;
 use crate::util::dt_gatepay::DtGatepay;
+use crate::util::GatepayApiCred;
+use crate::util::GatepayNotificationCred;
 
 pub type ApiSignResult<'a> =
     Pin<Box<dyn Future<Output = Result<SmartString<128>, SignError>> + Send + 'a>>;

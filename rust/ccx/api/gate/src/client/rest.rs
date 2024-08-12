@@ -12,6 +12,7 @@ use smart_string::SmartString;
 use thiserror::Error;
 use uuid::Uuid;
 
+use super::websocket::WebsocketStream;
 use crate::api::ApiMethod;
 use crate::api::GateApiError;
 use crate::api::PrivateRequest;
@@ -20,8 +21,6 @@ use crate::client::config::GateApiConfig;
 use crate::client::signer::GateSigner;
 use crate::client::signer::SignError;
 use crate::error::GateResult;
-
-use super::websocket::WebsocketStream;
 
 #[derive(Debug, Error)]
 pub enum CallError {

@@ -1,5 +1,7 @@
-use ccx_api_lib::{Atom, Decimal};
-use serde::{Deserialize, Serialize};
+use ccx_api_lib::Atom;
+use ccx_api_lib::Decimal;
+use serde::Deserialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Trade {
@@ -22,9 +24,9 @@ pub struct TradePayload {
 
 #[cfg(test)]
 mod tests {
-    use super::super::*;
-
     use rust_decimal::Decimal;
+
+    use super::super::*;
 
     #[test]
     fn test_decode_trade_event() {

@@ -1,5 +1,6 @@
 use ccx_api_lib::Atom;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 use super::order_book::OrderLevel;
 
@@ -31,7 +32,11 @@ pub struct OrderBookDiffBid {
 mod deser {
     use std::fmt;
 
-    use serde::de::{Deserialize, Deserializer, Error, SeqAccess, Visitor};
+    use serde::de::Deserialize;
+    use serde::de::Deserializer;
+    use serde::de::Error;
+    use serde::de::SeqAccess;
+    use serde::de::Visitor;
 
     use super::*;
 
@@ -161,9 +166,9 @@ mod deser {
 
 #[cfg(test)]
 mod tests {
-    use super::super::*;
-
     use rust_decimal::Decimal;
+
+    use super::super::*;
 
     #[test]
     fn test_decode_diff_order_book_event_ask() {

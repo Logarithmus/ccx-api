@@ -2,10 +2,11 @@ use std::collections::BTreeMap;
 
 use rust_decimal::prelude::*;
 use rust_decimal::Decimal;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
-use crate::websocket::OrderBookDiff;
 use crate::error::GateResult;
+use crate::websocket::OrderBookDiff;
 
 #[derive(Debug)]
 pub enum OrderBookUpdater {

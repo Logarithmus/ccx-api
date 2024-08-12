@@ -1,11 +1,13 @@
 use ccx_api_lib::serde_util::none_as_empty_str;
-use chrono::{DateTime, Utc};
+use chrono::DateTime;
+use chrono::Utc;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_with::formats::Flexible;
+use serde_with::serde_as;
 use serde_with::skip_serializing_none;
 use serde_with::TimestampSeconds;
-use serde_with::{formats::Flexible, serde_as};
 use smallvec::SmallVec;
 use smart_string::SmartString;
 
@@ -90,7 +92,8 @@ pub struct SpotTicker {
 #[cfg(feature = "with_network")]
 mod with_network {
     use super::*;
-    use crate::{api::spot::SpotApi, client::rest::RequestError};
+    use crate::api::spot::SpotApi;
+    use crate::client::rest::RequestError;
 
     impl<S> SpotApi<S> {
         /// # Retrieve ticker information

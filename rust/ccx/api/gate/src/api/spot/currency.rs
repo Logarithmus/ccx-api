@@ -1,12 +1,12 @@
-use crate::api::ApiMethod;
-use crate::api::ApiVersion;
-use crate::api::PublicRequest;
-use crate::api::Request;
-
 use ccx_api_lib::Decimal;
 use serde::Deserialize;
 use serde::Serialize;
 use smart_string::SmartString;
+
+use crate::api::ApiMethod;
+use crate::api::ApiVersion;
+use crate::api::PublicRequest;
+use crate::api::Request;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct AllCurrenciesRequest;

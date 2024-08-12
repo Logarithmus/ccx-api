@@ -6,10 +6,10 @@ mod tickers;
 pub use accounts::*;
 pub use currency::*;
 pub use currency_pair::*;
+use ref_cast::RefCast;
 pub use tickers::*;
 
 use super::GateApi;
-use ref_cast::RefCast;
 
 /// Spot trading
 #[derive(RefCast, Clone)]
