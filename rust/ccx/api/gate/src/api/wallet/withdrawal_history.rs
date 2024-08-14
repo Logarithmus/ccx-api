@@ -89,7 +89,7 @@ mod with_network {
         /// * `to` - Time range ending, default to current time
         /// * `limit` - Maximum number of records to be returned in a single list
         /// * `offset` - List offset, starting from 0
-        pub async fn withdrawals(
+        pub async fn withdrawal_history(
             &self,
             request: &WalletWithdrawalHistoryRequest,
         ) -> Result<<WalletWithdrawalHistoryRequest as Request>::Response, RequestError> {

@@ -30,7 +30,9 @@ mod with_network {
     use crate::client::config::CCX_GATE_API_PREFIX;
     use crate::client::rest::RequestError;
     use crate::client::rest::RestClient;
+    use crate::client::websocket::WebsocketStream;
     use crate::client::GateSigner;
+    use crate::error::GateResult;
     use crate::util::GateApiCred;
 
     #[derive(Clone)]
@@ -90,6 +92,10 @@ mod with_network {
         /// Withdrawal operations
         pub fn withdrawal(&self) -> &WithdrawalApi<S> {
             RefCast::ref_cast(self)
+        }
+
+        pub async fn websocket(&self) -> GateResult<WebsocketStream> {
+            self.client.websocket().await
         }
     }
 

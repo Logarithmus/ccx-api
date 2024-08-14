@@ -1,5 +1,5 @@
-use ccx_api_lib::GateApiCred;
 use ccx_gate::client::rest::RequestError;
+use ccx_gate::util::GateApiCred;
 use ccx_gate::GateApi;
 // use rust_decimal_macros::dec;
 
@@ -24,7 +24,7 @@ async fn main() -> Result<(), RequestError> {
     //     )
     //     .await
     // )?;
-    dbg!(api.wallet().withdrawals(&Default::default()).await)?;
+    dbg!(api.wallet().withdrawal_history(&Default::default()).await)?;
     // dbg!(
     //     api.withdrawal_withdraw(
     //         Some("client id".into()),

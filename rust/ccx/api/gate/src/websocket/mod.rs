@@ -19,6 +19,7 @@ pub use pong::*;
 pub use subscription_status::*;
 pub use system_status::*;
 pub use trade::*;
+pub use order_book::*;
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(untagged)]

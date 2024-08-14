@@ -128,7 +128,7 @@ impl<S> RestClient<S> {
         }
     }
 
-    pub async fn web_socket(&self) -> GateResult<WebsocketStream> {
+    pub async fn websocket(&self) -> GateResult<WebsocketStream> {
         let url = self.inner.config.stream_base.clone();
         WebsocketStream::connect(self.clone(), url).await
     }

@@ -38,7 +38,7 @@ impl PublicRequest for CurrencyPairRequest {}
 
 /// Represents a spot currency pair.
 #[serde_as]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct CurrencyPair {
     /// Currency pair identifier.
@@ -82,7 +82,7 @@ pub struct CurrencyPair {
 }
 
 /// How currency pair can be traded
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 pub enum TradeStatus {
     /// Can be bought or sold

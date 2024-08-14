@@ -2,10 +2,12 @@ mod accounts;
 mod currency;
 mod currency_pair;
 mod tickers;
+mod order_book;
 
 pub use accounts::*;
 pub use currency::*;
 pub use currency_pair::*;
+pub use order_book::*;
 use ref_cast::RefCast;
 pub use tickers::*;
 

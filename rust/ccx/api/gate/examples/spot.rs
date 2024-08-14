@@ -1,5 +1,4 @@
-use ccx_api_lib::GateApiCred;
-use ccx_gate::GateApi;
+use ccx_gate::{util::GateApiCred, GateApi};
 
 #[actix_rt::main]
 async fn main() {
