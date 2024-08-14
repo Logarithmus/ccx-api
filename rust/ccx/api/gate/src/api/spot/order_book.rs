@@ -92,14 +92,12 @@ mod with_network {
     use crate::client::rest::RequestError;
 
     impl<S> SpotApi<S> {
-        /// # Retrieve ticker information
+        /// Retrieve order book
         ///
-        /// Return only related data if currency_pair is specified; otherwise return all of them.
+        /// Order book will be sorted by price from high to low on bids; low to high on asks
         ///
         /// ## Parameters
-        ///
-        /// * `currency_pair` - Currency pair
-        /// * `timezone` - Timezone
+        /// See [SpotOrderBookRequest]
         pub async fn order_book(
             &self,
             request: &SpotOrderBookRequest,
