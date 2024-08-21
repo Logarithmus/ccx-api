@@ -142,7 +142,8 @@ mod tests {
                 ],
             }))),
         );
-        assert_eq!(expected, serde_json::from_str(json).unwrap())
+        let jd = &mut serde_json::Deserializer::from_str(json);
+        assert_eq!(expected, serde_path_to_error::deserialize(jd).unwrap());
     }
 
     impl WsResponse {
