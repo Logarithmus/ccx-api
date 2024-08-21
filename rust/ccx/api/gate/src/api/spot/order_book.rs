@@ -85,6 +85,12 @@ impl<'de> Deserialize<'de> for PriceAndAmount {
     }
 }
 
+impl From<(Decimal, Decimal)> for PriceAndAmount {
+    fn from((price, amount): (Decimal, Decimal)) -> Self {
+        Self { price, amount }
+    }
+}
+
 #[cfg(feature = "with_network")]
 mod with_network {
     use super::*;

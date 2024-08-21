@@ -156,12 +156,7 @@ impl<R: Request, S> GateRequest<R, S> {
     }
 
     pub async fn call_unsigned(self) -> Result<R::Response, CallError> {
-        let Self {
-            api_client: _,
-            request,
-            body,
-            _phantom,
-        } = self;
+        let Self { request, body, .. } = self;
 
         let request_id = Uuid::new_v4();
 

@@ -12,7 +12,7 @@ pub use request::*;
 pub use version::*;
 
 pub const API_BASE: &str = "https://api.gateio.ws/api/";
-pub const STREAM_BASE: &str = "wss://api.gateio.ws/ws/";
+pub const STREAM_BASE: &str = "wss://api.gateio.ws/ws/v4/";
 
 #[cfg(feature = "with_network")]
 pub use with_network::*;

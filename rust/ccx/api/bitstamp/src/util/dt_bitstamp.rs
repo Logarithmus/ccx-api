@@ -31,7 +31,8 @@ mod datetime {
         D: serde::Deserializer<'de>,
     {
         let date_time_str = String::deserialize(deserializer)?;
-        Utc.datetime_from_str(&date_time_str, "%Y-%m-%d %H:%M:%S%.f")
+        NaiveDateTime::parse_from_str(&date_time_str, "%Y-%m-%d %H:%M:%S%.f")
+            .map(|naive| naive.and_utc())
             .map_err(serde::de::Error::custom)
     }
 }
