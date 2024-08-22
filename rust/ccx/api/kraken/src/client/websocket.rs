@@ -18,9 +18,9 @@ use crate::client::{KrakenSigner, RestClient};
 use crate::error::{KrakenError, KrakenResult};
 use crate::ws_stream::UpstreamApiRequest;
 use crate::ws_stream::UpstreamWebsocketMessage;
-use crate::ws_stream::WsRequest;
+use crate::ws_stream::WsCommand;
 use crate::ws_stream::WsEvent;
-use crate::ws_stream::WsRequest;
+use crate::ws_stream::WsSubscription;
 
 /// How often heartbeat pings are sent.
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -123,10 +123,10 @@ impl StreamHandler<Result<ws::Frame, ws::ProtocolError>> for Websocket {
 
 impl actix::io::WriteHandler<ws::ProtocolError> for Websocket {}
 
-impl Handler<M<WsRequest>> for Websocket {
+impl Handler<M<WsCommand>> for Websocket {
     type Result = ();
 
-    fn handle(&mut self, M(cmd): M<WsRequest>, ctx: &mut Self::Context) {
+    fn handle(&mut self, M(cmd): M<WsCommand>, ctx: &mut Self::Context) {
         let msg = UpstreamApiRequest {
             reqid: self.id_seq.next(),
             payload: cmd,
@@ -213,8 +213,8 @@ impl std::ops::Deref for WebsocketStream {
 }
 
 impl WebsocketStreamTx {
-    pub async fn subscribe(&self, subscription: impl Into<WsRequest>) -> KrakenResult<()> {
-        let cmd = WsRequest::Subscribe(subscription.into());
+    pub async fn subscribe(&self, subscription: impl Into<WsSubscription>) -> KrakenResult<()> {
+        let cmd = WsCommand::Subscribe(subscription.into());
         self.addr
             .send(M(cmd))
             .await

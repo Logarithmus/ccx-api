@@ -18,8 +18,8 @@ use crate::client::RestClient;
 use crate::error::GateError;
 use crate::error::GateResult;
 use crate::websocket::request::WsRequest;
+use crate::websocket::response::Event;
 use crate::websocket::response::WsResponse;
-use crate::websocket::response::WsResponseInner;
 
 /// How often heartbeat pings are sent.
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -86,7 +86,7 @@ impl StreamHandler<Result<ws::Frame, ws::ProtocolError>> for Websocket {
                     )
                 }
                 Ok(WsResponse {
-                    inner: WsResponseInner::Pong,
+                    event: Event::Pong(Ok(())),
                     ..
                 }) => {
                     self.latest_heartbeat_time = Instant::now();

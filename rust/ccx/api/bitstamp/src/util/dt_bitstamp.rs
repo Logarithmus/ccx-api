@@ -1,6 +1,5 @@
 use chrono::DateTime;
 use chrono::NaiveDateTime;
-use chrono::TimeZone;
 use chrono::Utc;
 use derive_more::Deref;
 use derive_more::From;
@@ -40,7 +39,7 @@ mod datetime {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Timelike;
+    use chrono::{TimeZone, Timelike};
 
     const DATE_TIME_STR: &str = "2020-03-11 20:48:46.622052";
 

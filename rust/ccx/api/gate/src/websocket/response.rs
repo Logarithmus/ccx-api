@@ -1,45 +1,104 @@
 use super::order_book::OrderBookSnapshot;
-use serde::{de::IgnoredAny, Deserialize};
+use ccx_api_lib::serde_util::none_as_empty_str;
+use serde::{de::Error, Deserialize, Deserializer};
+use serde_json::value::RawValue;
+use serde_repr::Deserialize_repr;
+
+pub type WsResult<T> = Result<T, WsErr>;
 
 /// Gate WebSocket API response
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
 pub struct WsResponse {
     /// Request timestamp in seconds
     pub time: i64,
     /// Request ID extracted from the client request payload if client request has one
     pub id: Option<i64>,
-    /// Channel-dependent fields of the response
-    #[serde(flatten)]
-    pub inner: WsResponseInner,
+    /// WebSocket channel
+    pub event: Event,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(tag = "channel")]
+#[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
-pub enum WsResponseInner {
-    #[serde(rename = "spot.pong")]
-    Pong,
-    #[serde(rename = "spot.order_book")]
-    OrderBook(WsResponseEvent<OrderBookSnapshot>),
+pub enum Event {
+    /// Check if connection to server is still alive
+    Pong(WsResult<()>),
+    /// Periodically notify about top bids and asks snapshot with limited levels
+    OrderBook(EventInner<OrderBookSnapshot>),
 }
 
-#[derive(Debug, Clone, Deserialize)]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum WsResult<T> {
-    #[serde(rename = "error")]
-    Err(WsErr),
-    #[serde(rename = "result")]
-    Ok(T),
-}
-
-impl<T> From<WsResult<T>> for Result<T, WsErr> {
-    fn from(result: WsResult<T>) -> Self {
-        match result {
-            WsResult::Err(err) => Err(err),
-            WsResult::Ok(ok) => Ok(ok),
+impl<'de> Deserialize<'de> for WsResponse {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        struct WsResponseInternal {
+            time: i64,
+            id: Option<i64>,
+            channel: Channel,
+            #[serde(with = "none_as_empty_str", default)]
+            event: Option<EventKind>,
+            error: Option<WsErr>,
+            result: Option<Box<RawValue>>,
         }
+
+        #[derive(Deserialize)]
+        #[serde(rename_all = "lowercase")]
+        enum EventKind {
+            Subscribe,
+            Unsubscribe,
+            Update,
+        }
+
+        #[derive(Deserialize)]
+        enum Channel {
+            #[serde(rename = "spot.pong")]
+            Pong,
+            #[serde(rename = "spot.order_book")]
+            OrderBook,
+        }
+
+        let WsResponseInternal {
+            time,
+            id,
+            channel,
+            event,
+            error,
+            result,
+        } = WsResponseInternal::deserialize(deserializer)?;
+
+        let result = match (error, result) {
+            (Some(e), _) => Err(e),
+            (_, Some(ok)) => Ok(ok),
+            _ => Ok(serde_json::from_str("{}").unwrap()),
+        };
+        let event = match (channel, event) {
+            (Channel::Pong, _) => Ok(Event::Pong(result.map(|_| ()))),
+            (Channel::OrderBook, Some(EventKind::Subscribe)) => {
+                Ok(Event::OrderBook(EventInner::Subscribe(result.map(|_| ()))))
+            }
+            (Channel::OrderBook, Some(EventKind::Unsubscribe)) => Ok(Event::OrderBook(
+                EventInner::Unsubscribe(result.map(|_| ())),
+            )),
+            (Channel::OrderBook, Some(EventKind::Update)) => {
+                Ok(Event::OrderBook(EventInner::Update(match result {
+                    Ok(json) => Ok(serde_json::from_str(json.get()).map_err(D::Error::custom)?),
+                    Err(err) => Err(err),
+                })))
+            }
+            (_, None) => Err(D::Error::missing_field("event")),
+        }?;
+        Ok(WsResponse { time, id, event })
     }
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq))]
+pub enum EventInner<T> {
+    /// Server response to subscription request
+    Subscribe(WsResult<()>),
+    /// Server response to unsubscription request
+    Unsubscribe(WsResult<()>),
+    /// Server notification (update) with new info previously subscribed to
+    Update(WsResult<T>),
 }
 
 /// Gate WebSocket API error
@@ -51,7 +110,8 @@ pub struct WsErr {
 }
 
 /// Represents error codes returned by the server.
-#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Deserialize_repr, PartialEq, Eq)]
+#[repr(u8)]
 pub enum WsErrCode {
     /// Invalid request body format.
     InvalidRequestBody = 1,
@@ -61,27 +121,18 @@ pub enum WsErrCode {
     ServerError = 3,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "lowercase", tag = "event")]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum WsResponseEvent<T> {
-    Subscribe(WsResult<IgnoredAny>),
-    Unsubscribe(WsResult<IgnoredAny>),
-    Update(WsResult<T>),
-}
-
 #[cfg(test)]
 mod tests {
-    use super::WsResponseInner;
+    use super::Event;
     use crate::websocket::{
         order_book::OrderBookSnapshot,
-        response::{WsResponse, WsResponseEvent, WsResult},
+        response::{EventInner, WsErr, WsErrCode::ServerError, WsResponse},
     };
     use rust_decimal_macros::dec;
     use similar_asserts::assert_eq;
 
     #[test]
-    fn deserialize_pong() {
+    fn deserialize_pong_success() {
         let json = r#"{
   "time": 1545404023,
   "channel": "spot.pong",
@@ -89,15 +140,38 @@ mod tests {
   "error": null,
   "result": null
 }"#;
-        let expected = WsResponse::new(1545404023, WsResponseInner::Pong);
-        assert_eq!(expected, serde_json::from_str(json).unwrap())
+        let expected = WsResponse::new(1545404023, Event::Pong(Ok(())));
+        let jd = &mut serde_json::Deserializer::from_str(json);
+        assert_eq!(expected, serde_path_to_error::deserialize(jd).unwrap());
+    }
+
+    #[test]
+    fn deserialize_pong_error() {
+        let json = r#"{
+  "time": 1545404023,
+  "channel": "spot.pong",
+  "event": "",
+  "error": {
+    "code": 3,
+    "message": "Server side error"
+  },
+  "result": null
+}"#;
+        let expected = WsResponse::new(
+            1545404023,
+            Event::Pong(Err(WsErr {
+                code: ServerError,
+                message: "Server side error".into(),
+            })),
+        );
+        let jd = &mut serde_json::Deserializer::from_str(json);
+        assert_eq!(expected, serde_path_to_error::deserialize(jd).unwrap());
     }
 
     #[test]
     fn deserialize_order_book() {
         let json = r#"{
-  "time": 1606295412,
-  "time_ms": 1606295412213,
+  "time": 1545404023,
   "channel": "spot.order_book",
   "event": "update",
   "result": {
@@ -121,8 +195,8 @@ mod tests {
   }
 }"#;
         let expected = WsResponse::new(
-            1606295412,
-            WsResponseInner::OrderBook(WsResponseEvent::Update(WsResult::Ok(OrderBookSnapshot {
+            1545404023,
+            Event::OrderBook(EventInner::Update(Ok(OrderBookSnapshot {
                 update_time_ms: 1606295412123,
                 last_update_id: 48791820,
                 currency_pair: "BTC_USDT".into(),
@@ -147,10 +221,10 @@ mod tests {
     }
 
     impl WsResponse {
-        fn new(time: i64, inner: WsResponseInner) -> Self {
+        fn new(time: i64, event: Event) -> Self {
             Self {
                 time,
-                inner,
+                event,
                 id: None,
             }
         }
