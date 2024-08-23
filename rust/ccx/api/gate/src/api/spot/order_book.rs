@@ -71,8 +71,7 @@ pub struct SpotOrderBookResponse {
 }
 
 /// Order price and amount (volume)
-#[derive(Debug, Clone, Default)]
-#[cfg_attr(test, derive(PartialEq))]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct PriceAndAmount {
     pub price: Decimal,
     pub amount: Decimal,
