@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use super::order_book::OrderBookSnapshot;
 use ccx_api_lib::serde_util::none_as_empty_str;
 use serde::{de::Error, Deserialize, Deserializer};
@@ -107,6 +109,12 @@ pub enum EventInner<T> {
 pub struct WsErr {
     pub code: WsErrCode,
     pub message: String,
+}
+
+impl Display for WsErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{self:?}")
+    }
 }
 
 /// Represents error codes returned by the server.

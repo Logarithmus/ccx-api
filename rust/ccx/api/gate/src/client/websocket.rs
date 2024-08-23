@@ -17,7 +17,9 @@ use url::Url;
 use crate::client::RestClient;
 use crate::error::GateError;
 use crate::error::GateResult;
+use crate::websocket::order_book::OrderBookRequest;
 use crate::websocket::request::WsRequest;
+use crate::websocket::request::WsRequestEvent;
 use crate::websocket::response::Event;
 use crate::websocket::response::WsResponse;
 
@@ -188,6 +190,18 @@ impl WebsocketStreamTx {
     pub async fn send(&self, request: WsRequest) -> GateResult<()> {
         self.addr
             .send(M(request))
+            .await
+            .map_err(|_e| GateError::IoError(io::ErrorKind::ConnectionAborted.into()))
+    }
+
+    /// Subscribe or unsubscribe from order book snapshots
+    pub async fn order_book(
+        &self,
+        event: WsRequestEvent,
+        payload: OrderBookRequest,
+    ) -> GateResult<()> {
+        self.addr
+            .send(M(WsRequest::order_book(event, payload)))
             .await
             .map_err(|_e| GateError::IoError(io::ErrorKind::ConnectionAborted.into()))
     }
