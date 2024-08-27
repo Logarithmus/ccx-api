@@ -100,9 +100,8 @@ mod with_network {
     use super::*;
     use crate::api::spot::SpotApi;
     use crate::client::rest::RequestError;
-    use crate::client::signer::GateSigner;
 
-    impl<S: GateSigner> SpotApi<S> {
+    impl<S> SpotApi<S> {
         /// List all currency pairs supported by the API.
         ///
         /// # Endpoint

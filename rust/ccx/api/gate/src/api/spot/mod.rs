@@ -3,6 +3,7 @@ mod currency;
 mod currency_pair;
 mod tickers;
 pub mod order_book;
+pub mod order;
 
 pub use accounts::*;
 pub use currency::*;

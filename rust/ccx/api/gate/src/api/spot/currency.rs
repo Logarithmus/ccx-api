@@ -57,9 +57,8 @@ mod with_network {
     use super::*;
     use crate::api::spot::SpotApi;
     use crate::client::rest::RequestError;
-    use crate::client::signer::GateSigner;
 
-    impl<S: GateSigner> SpotApi<S> {
+    impl<S> SpotApi<S> {
         /// List all currencies' details
         ///
         /// `GET /spot/currencies`
@@ -70,7 +69,7 @@ mod with_network {
         ///
         /// ## Parameters
         /// None
-        pub async fn all_currencies(&self) -> Result<Vec<Currency>, RequestError> {
+        pub async fn list_currencies(&self) -> Result<Vec<Currency>, RequestError> {
             let request = AllCurrenciesRequest;
             self.0.request("/spot/currencies", &request).await
         }
@@ -82,7 +81,7 @@ mod with_network {
         /// Get details of a specific currency
         /// ## Parameters
         /// * `currency`
-        pub async fn currency(&self, currency: &str) -> Result<Currency, RequestError> {
+        pub async fn get_currency(&self, currency: &str) -> Result<Currency, RequestError> {
             let path = format!("/spot/currencies/{currency}");
             self.0.request(&path, &CurrencyRequest).await
         }
