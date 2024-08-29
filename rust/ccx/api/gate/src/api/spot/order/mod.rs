@@ -1,4 +1,3 @@
-mod amend;
 mod create;
 mod get;
 mod list;
