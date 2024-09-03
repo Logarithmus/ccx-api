@@ -17,14 +17,14 @@ pub struct GetOrderParams {
     ///
     /// If you are querying pending order records, this field is required.
     /// If you are querying traded records, this field can be left blank.
-    currency_pair: Option<SmartString<15>>,
+    pub currency_pair: Option<SmartString<15>>,
     /// Operation account.
     ///
     /// Defaults to spot, portfolio and margin account if not specified.
     ///
     /// Set to `cross_margin` to operate against margin account.
     /// Portfolio margin account must set to `cross_margin` only
-    account: Option<AccountType>,
+    pub account: Option<AccountType>,
 }
 
 impl Request for GetOrderParams {

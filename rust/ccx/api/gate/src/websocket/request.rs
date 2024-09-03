@@ -1,7 +1,8 @@
-use super::order_book::OrderBookRequest;
 use chrono::Utc;
 use serde::Serialize;
 use serde_with::skip_serializing_none;
+
+use super::order_book::OrderBookRequest;
 
 #[skip_serializing_none]
 #[derive(Debug, Clone, Serialize)]
@@ -62,12 +63,13 @@ enum WsRequestInner {
 
 #[cfg(test)]
 mod tests {
-    use super::WsRequestEvent;
-    use crate::websocket::{
-        order_book::{Interval, Level, OrderBookRequest},
-        request::WsRequest,
-    };
     use similar_asserts::assert_eq;
+
+    use super::WsRequestEvent;
+    use crate::websocket::order_book::Interval;
+    use crate::websocket::order_book::Level;
+    use crate::websocket::order_book::OrderBookRequest;
+    use crate::websocket::request::WsRequest;
 
     #[test]
     fn serialize_ping() {

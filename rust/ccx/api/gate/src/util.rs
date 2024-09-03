@@ -1,5 +1,6 @@
 use ccx_api_lib::env_var_with_prefix;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 
 /// Gate.io API credentials.
 #[derive(Clone, Default, Serialize, Deserialize)]

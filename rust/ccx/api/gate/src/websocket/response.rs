@@ -1,10 +1,13 @@
 use std::fmt::Display;
 
-use super::order_book::OrderBookSnapshot;
 use ccx_api_lib::serde_util::none_as_empty_str;
-use serde::{de::Error, Deserialize, Deserializer};
+use serde::de::Error;
+use serde::Deserialize;
+use serde::Deserializer;
 use serde_json::value::RawValue;
 use serde_repr::Deserialize_repr;
+
+use super::order_book::OrderBookSnapshot;
 
 pub type WsResult<T> = Result<T, WsErr>;
 
@@ -131,13 +134,15 @@ pub enum WsErrCode {
 
 #[cfg(test)]
 mod tests {
-    use super::Event;
-    use crate::websocket::{
-        order_book::OrderBookSnapshot,
-        response::{EventInner, WsErr, WsErrCode::ServerError, WsResponse},
-    };
     use rust_decimal_macros::dec;
     use similar_asserts::assert_eq;
+
+    use super::Event;
+    use crate::websocket::order_book::OrderBookSnapshot;
+    use crate::websocket::response::EventInner;
+    use crate::websocket::response::WsErr;
+    use crate::websocket::response::WsErrCode::ServerError;
+    use crate::websocket::response::WsResponse;
 
     #[test]
     fn deserialize_pong_success() {

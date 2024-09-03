@@ -1,6 +1,10 @@
-use crate::api::spot::PriceAndAmount;
-use serde::{ser::SerializeSeq, Deserialize, Serialize, Serializer};
+use serde::ser::SerializeSeq;
+use serde::Deserialize;
+use serde::Serialize;
+use serde::Serializer;
 use smart_string::SmartString;
+
+use crate::api::spot::PriceAndAmount;
 
 /// Order book WebSocket request payload
 #[derive(Debug, Clone)]

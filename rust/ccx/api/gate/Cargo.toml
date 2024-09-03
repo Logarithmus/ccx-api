@@ -51,6 +51,7 @@ actix-web = { version = "4", features = ["rustls"], optional = true }
 actix-web-actors = { version = "4", optional = true }
 awc = { version = "3", optional = true, features = ["rustls"] }
 serde_repr = "0.1.19"
+displaydoc = "0.2.5"
 
 [dev-dependencies]
 actix-rt = "2"

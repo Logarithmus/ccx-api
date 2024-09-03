@@ -1,10 +1,11 @@
-mod create;
-mod get;
-mod list;
+pub mod create;
+pub mod get;
+pub mod list;
 
 use chrono::DateTime;
 use chrono::Utc;
 use create::CreateOrderRequest;
+use displaydoc::Display;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use serde::Serialize;
@@ -25,13 +26,10 @@ mod with_network {
     use crate::client::signer::GateSigner;
 
     impl<S: GateSigner> SpotApi<S> {
-        /// List all currency pairs supported by the API.
+        /// Create an order
         ///
         /// # Endpoint
-        /// `GET /spot/currency_pairs`
-        ///
-        /// # Description
-        /// This endpoint retrieves a list of all currency pairs that are supported.
+        /// `POST /spot/orders`
         pub async fn create_order(
             &self,
             request: &CreateOrderRequest,
@@ -39,16 +37,14 @@ mod with_network {
             self.0.signed_request("/spot/orders", request).await
         }
 
-        /// Get details of a specific currency pair.
+        /// List orders
         ///
         /// # Endpoint
-        /// `GET /spot/currency_pairs/{currency_pair}`
+        /// `GET /spot/orders`
         ///
         /// # Description
-        /// This endpoint retrieves detailed information about a specific currency pair.
-        ///
-        /// # Parameters
-        /// - `currency_pair`: The currency pair to retrieve details for.  
+        /// Spot, portfolio and margin orders are returned by default.
+        /// If cross margin orders are needed, `account` must be set to `cross_margin`
         pub async fn list_orders(
             &self,
             request: &ListOrdersRequest,
@@ -56,16 +52,13 @@ mod with_network {
             self.0.signed_request("/spot/orders", request).await
         }
 
-        /// Get details of a specific currency pair.
+        /// Get a single order
         ///
         /// # Endpoint
-        /// `GET /spot/currency_pairs/{currency_pair}`
+        /// `GET /spot/orders/{order_id}`
         ///
         /// # Description
-        /// This endpoint retrieves detailed information about a specific currency pair.
-        ///
-        /// # Parameters
-        /// - `currency_pair`: The currency pair to retrieve details for.  
+        /// This endpoint retrieves detailed information about a specific order.
         pub async fn get_order(
             &self,
             id: &str,
@@ -168,7 +161,7 @@ pub enum OrderStatus {
 }
 
 /// Represents the possible completion statuses of an order.
-#[derive(Debug, Clone, Copy, Deserialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Display)]
 #[cfg_attr(test, derive(PartialEq))]
 #[serde(rename_all = "snake_case")]
 pub enum FinishAs {
