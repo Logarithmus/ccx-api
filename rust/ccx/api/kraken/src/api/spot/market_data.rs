@@ -115,9 +115,11 @@ pub struct AssetPairInfo {
     /// Volume lot size.
     #[deprecated]
     pub lot: Atom,
-    /// Scaling decimal places for pair.
+    /// Number of decimal places for prices in this pair.
     pub pair_decimals: u32,
-    /// Scaling decimal places for volume.
+    /// Number of decimal places for cost of trades in pair (quote asset terms)
+    pub cost_decimals: u32,
+    /// Number of decimal places for volume (base asset terms)
     pub lot_decimals: u32,
     /// Amount to multiply lot volume by to get currency volume.
     pub lot_multiplier: u32,
