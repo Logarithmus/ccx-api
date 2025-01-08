@@ -29,7 +29,7 @@ actix-web = { version = "4", features = ["rustls"], optional = true }
 actix-web-actors = { version = "4", optional = true }
 awc = { version = "3", optional = true, features = ["rustls"] }
 base64 = "0.21"
-chrono = { version = "0.4", default_features = false, features = ["clock"] }
+chrono = { version = "0.4", default_features = false, features = ["clock", "serde"] }
 log = "0.4"
 futures = "0.3"
 hmac = "0.12"
@@ -45,6 +45,7 @@ thiserror = "1"
 url = { version = "2", features = ["serde"] }
 
 ccx-api-lib = { path = "../../util/lib" }
+serde_with = { version = "3.11.0", features = ["chrono"] }
 
 [dev-dependencies]
 env_logger = "0.10"

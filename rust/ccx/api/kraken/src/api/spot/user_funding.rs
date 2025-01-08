@@ -1,4 +1,6 @@
 use ccx_api_lib::serde_util::is_false;
+use chrono::{DateTime, Utc};
+use serde_with::{serde_as, TimestampSeconds};
 
 use super::prelude::*;
 use crate::client::Task;
@@ -48,9 +50,10 @@ pub enum DepositMethodLimit {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-struct GetDepositAddressesRequest<'a> {
-    asset: &'a str,
-    method: &'a str,
+pub struct GetDepositAddressesRequest<'a> {
+    pub asset: &'a str,
+    pub method: &'a str,
+    pub new: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -72,10 +75,13 @@ pub struct DepositAddress {
     pub new: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-struct GetStatusOfRecentDepositsRequest<'a> {
-    asset: Option<&'a str>,
-    method: Option<&'a str>,
+#[serde_as]
+#[derive(Debug, Serialize, Clone, PartialEq)]
+pub struct GetStatusOfRecentDepositsRequest<'a> {
+    pub asset: Option<&'a str>,
+    pub method: Option<&'a str>,
+    #[serde_as(as = "Option<TimestampSeconds<String>>")]
+    pub start: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
@@ -123,6 +129,7 @@ pub struct Deposit {
 
     /// Client sending transaction id(s) for deposits that credit with a
     /// sweeping transaction
+    #[serde(default)]
     pub originators: Vec<String>,
 }
 
@@ -139,13 +146,12 @@ pub enum DepositStatus {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[serde(rename_all = "kebab-case")]
 pub enum DepositStatusProperties {
     /// A return transaction initiated by Kraken; it cannot be canceled.
-    #[serde(rename = "return")]
     Return,
 
     /// Deposit is on hold pending review
-    #[serde(rename = "onhold")]
     OnHold,
 }
 
@@ -284,12 +290,13 @@ pub use with_network::*;
 
 #[cfg(feature = "with_network")]
 mod with_network {
+    use crate::client::NonceWrapper;
+
     use super::*;
 
     impl<S> SpotApi<S>
     where
-        S: crate::client::KrakenSigner,
-        S: Unpin + 'static,
+        S: crate::client::KrakenSigner + Unpin + 'static,
     {
         /// Get Deposit Methods
         ///
@@ -321,8 +328,7 @@ mod with_network {
         pub fn get_deposit_addresses(
             &self,
             nonce: Nonce,
-            asset: &str,
-            method: &str,
+            request: &GetDepositAddressesRequest,
         ) -> KrakenResult<Task<GetDepositAddressesResponse>> {
             Ok(self
                 .rate_limiter
@@ -330,7 +336,7 @@ mod with_network {
                     self.client
                         .post(API_0_PRIVATE_DEPOSIT_ADDRESSES)?
                         .signed(nonce)?
-                        .request_body(GetDepositAddressesRequest { asset, method })?,
+                        .request_body(request)?,
                 )
                 .cost(RL_PRIVATE_PER_MINUTE, 1)
                 .send())
@@ -347,8 +353,7 @@ mod with_network {
         pub fn get_status_of_recent_deposits(
             &self,
             nonce: Nonce,
-            asset: Option<&str>,
-            method: Option<&str>,
+            request: &GetStatusOfRecentDepositsRequest,
         ) -> KrakenResult<Task<GetStatusOfRecentDepositsResponse>> {
             Ok(self
                 .rate_limiter
@@ -356,7 +361,7 @@ mod with_network {
                     self.client
                         .post(API_0_PRIVATE_DEPOSIT_STATUS)?
                         .signed(nonce)?
-                        .request_body(GetStatusOfRecentDepositsRequest { asset, method })?,
+                        .request_body(request)?,
                 )
                 .cost(RL_PRIVATE_PER_MINUTE, 1)
                 .send())
@@ -463,5 +468,43 @@ mod with_network {
                 .cost(RL_PRIVATE_PER_MINUTE, 1)
                 .send())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SpotApi;
+    use crate::{
+        api::spot::GetDepositAddressesRequest,
+        client::{NonceSeq, RateLimiterTier},
+    };
+    use ccx_api_lib::{ApiCred, Decimal};
+
+    #[actix_rt::test]
+    async fn get_deposit_methods() {
+        let args: Vec<_> = std::env::args().skip(2).collect();
+        let [asset, method, ..] = &args[..2] else {
+            panic!("Expected 2 argument");
+        };
+        let signer = ApiCred {
+            key: "KIM8H2kimtQbgllXsjPvmAYS0roy8xL+bNSWigobfKqL91zqQIBKnpMY".into(),
+            secret: "TEr5vVR6FR5/JLzTV3XIohzrnt03MXk5EkU0lEkjyfPV38bQnLYOr7g38wMM+/5TiZPvl07k9yl7kwp4lkIFPg==".into(),
+        };
+        let _ = env_logger::try_init();
+        let api = SpotApi::new(signer, None, RateLimiterTier::Starter);
+        let mut nonce = NonceSeq::new();
+        let request = GetDepositAddressesRequest {
+            asset,
+            method,
+            new: false,
+        };
+        let (response, _) = api
+            // .get_status_of_recent_deposits(nonce.ts_next(), Some(asset), Some(method))
+            .get_deposit_addresses(nonce.ts_next(), &request)
+            .unwrap()
+            .await
+            .unwrap();
+        log::debug!("{response:?}");
+        panic!();
     }
 }

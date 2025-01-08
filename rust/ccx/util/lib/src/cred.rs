@@ -153,7 +153,7 @@ impl GateApiCred {
 }
 
 /// Advanced Trade API credentials.
-#[derive(Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ApiCred {
     pub key: String,
