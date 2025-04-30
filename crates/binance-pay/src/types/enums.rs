@@ -3,9 +3,9 @@
 use std::str::FromStr;
 
 #[cfg(feature = "db")]
-use diesel_derives::AsExpression;
+use diesel::AsExpression;
 #[cfg(feature = "db")]
-use diesel_derives::FromSqlRow;
+use diesel::FromSqlRow;
 use serde::Deserialize;
 use serde::Serialize;
 

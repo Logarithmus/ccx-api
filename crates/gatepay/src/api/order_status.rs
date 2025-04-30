@@ -76,7 +76,7 @@ pub struct OrderStatusResponse {
 #[serde(rename_all = "UPPERCASE")]
 #[cfg_attr(
     feature = "with_diesel",
-    derive(diesel_derives::AsExpression, diesel_derives::FromSqlRow)
+    derive(diesel::AsExpression, diesel::FromSqlRow)
 )]
 #[cfg_attr(feature = "with_diesel", sql_type = "diesel::sql_types::Text")]
 #[derive(EnumString, AsRefStr)]

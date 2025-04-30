@@ -7,7 +7,7 @@ use strum::EnumString;
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 #[cfg_attr(
     feature = "with_diesel",
-    derive(diesel_derives::AsExpression, diesel_derives::FromSqlRow)
+    derive(diesel::AsExpression, diesel::FromSqlRow)
 )]
 #[cfg_attr(feature = "with_diesel", sql_type = "diesel::sql_types::Text")]
 #[derive(EnumString, AsRefStr)]

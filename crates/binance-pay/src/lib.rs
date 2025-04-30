@@ -6,6 +6,9 @@ extern crate serde;
 #[macro_use]
 extern crate serde_plain;
 
+#[macro_use]
+extern crate diesel;
+
 mod api;
 #[cfg(feature = "with_network")]
 mod client;

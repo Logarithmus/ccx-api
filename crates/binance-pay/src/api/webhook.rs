@@ -3,9 +3,9 @@
 use std::str::FromStr;
 
 #[cfg(feature = "db")]
-use diesel_derives::AsExpression;
+use diesel::AsExpression;
 #[cfg(feature = "db")]
-use diesel_derives::FromSqlRow;
+use diesel::FromSqlRow;
 use rust_decimal::Decimal;
 
 use crate::json_string;
@@ -145,10 +145,7 @@ mod db_impl {
         DB: diesel::backend::Backend,
         str: diesel::serialize::ToSql<diesel::sql_types::Text, DB>,
     {
-        fn to_sql<W: std::io::Write>(
-            &self,
-            out: &mut diesel::serialize::Output<W, DB>,
-        ) -> diesel::serialize::Result {
+        fn to_sql(&self, out: &mut diesel::serialize::Output<DB>) -> diesel::serialize::Result {
             self.name().as_str().to_sql(out)
         }
     }

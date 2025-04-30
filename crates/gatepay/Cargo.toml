@@ -6,19 +6,13 @@ authors.workspace = true
 
 [features]
 default = ["with_network"]
-with_network = [
-    "ccx-api-lib/with_network",
-]
-with_diesel = [
-    "diesel",
-    "diesel_derives",
-]
+with_network = ["ccx-api-lib/with_network"]
+with_diesel = ["diesel"]
 
 [dependencies]
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
-derive_more = { version = "2", features = ["full"]}
-diesel = { version = "1", optional = true }
-diesel_derives = { version = "1", optional = true }
+derive_more = { version = "2", features = ["full"] }
+diesel = { workspace = true, optional = true }
 log = "0.4"
 futures = "0.3"
 hex = "0.4"
