@@ -39,4 +39,5 @@ ccx-gatepay = { path = "crates/gatepay" }
 ccx-kraken = { path = "crates/kraken" }
 
 [workspace.dependencies]
-diesel = "2.2.10"
+diesel = { version = "2.2.10", features = ["postgres_backend"] }
+serde_plain = "1.0.2"

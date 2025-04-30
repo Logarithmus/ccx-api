@@ -28,6 +28,7 @@ strum = { version = "0.25", features = ["derive"] }
 thiserror = "1"
 url = { version = "2", features = ["serde"] }
 uuid = { version = "0.8", features = ["serde", "v4"] }
+serde_plain.workspace = true
 
 ccx-api-lib = { path = "../ccx-api-lib" }
 

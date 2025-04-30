@@ -3,7 +3,6 @@ use serde::Deserialize;
 use serde::Serialize;
 use smart_string::SmartString;
 use strum::AsRefStr;
-use strum::EnumString;
 
 use crate::api::ApiMethod;
 use crate::api::ApiVersion;
@@ -79,15 +78,16 @@ pub struct OrderStatusResponse {
     derive(diesel::AsExpression, diesel::FromSqlRow)
 )]
 #[cfg_attr(feature = "with_diesel", sql_type = "diesel::sql_types::Text")]
-#[derive(EnumString, AsRefStr)]
+#[derive(AsRefStr)]
 #[strum(serialize_all = "UPPERCASE")]
 pub enum OrderStatus {
     Paid,
     Expired,
 }
 
+crate::enum_from_name!(OrderStatus);
 #[cfg(feature = "with_diesel")]
-impl_diesel1!(OrderStatus);
+crate::enum_diesel_sql!(OrderStatus);
 
 #[cfg(feature = "with_network")]
 mod with_network {

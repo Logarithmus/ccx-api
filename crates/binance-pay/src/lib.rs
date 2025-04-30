@@ -14,6 +14,7 @@ mod api;
 mod client;
 mod error;
 mod types;
+mod enums;
 
 pub use api::json_string;
 pub use api::opt_uuid_simple;

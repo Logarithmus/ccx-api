@@ -3,7 +3,6 @@ use serde::Deserialize;
 use serde::Serialize;
 use smart_string::SmartString;
 use strum::AsRefStr;
-use strum::EnumString;
 
 use crate::api::ApiMethod;
 use crate::api::ApiVersion;
@@ -51,7 +50,7 @@ pub struct EnvType {
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
-#[derive(EnumString, AsRefStr)]
+#[derive(AsRefStr)]
 #[strum(serialize_all = "UPPERCASE")]
 #[cfg_attr(
     feature = "with_diesel",
@@ -66,8 +65,9 @@ pub enum TerminalType {
     Others,
 }
 
+crate::enum_from_name!(TerminalType);
 #[cfg(feature = "with_diesel")]
-impl_diesel1!(TerminalType);
+crate::enum_diesel_sql!(TerminalType);
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

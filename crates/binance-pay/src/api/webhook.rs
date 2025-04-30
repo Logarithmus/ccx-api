@@ -22,18 +22,6 @@ pub enum BizStatus {
     #[serde(rename = "PAY_CLOSED")]
     PayClosed,
 }
-derive_display_from_serialize!(BizStatus);
-derive_fromstr_from_deserialize!(BizStatus);
-
-impl BizStatus {
-    pub fn from_name(name: &str) -> Option<Self> {
-        Self::from_str(name).ok()
-    }
-
-    pub fn name(&self) -> String {
-        self.to_string()
-    }
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BinancePayWebHookRequest<T>
@@ -53,6 +41,10 @@ where
     pub notification: T, //	string	Y	-	JSON string, data details refer to
 }
 
+crate::enum_from_name!(BizStatus);
+#[cfg(feature = "db")]
+crate::enum_diesel_sql!(BizStatus);
+
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
 #[cfg_attr(feature = "db", sql_type = "diesel::sql_types::Text")]
@@ -62,18 +54,9 @@ pub enum ReturnCode {
     #[serde(rename = "FAIL")]
     Fail,
 }
-derive_display_from_serialize!(ReturnCode);
-derive_fromstr_from_deserialize!(ReturnCode);
-
-impl ReturnCode {
-    pub fn from_name(name: &str) -> Option<Self> {
-        Self::from_str(name).ok()
-    }
-
-    pub fn name(&self) -> String {
-        self.to_string()
-    }
-}
+crate::enum_from_name!(ReturnCode);
+#[cfg(feature = "db")]
+crate::enum_diesel_sql!(ReturnCode);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BinancePayWebHookResponse {
@@ -130,65 +113,7 @@ pub struct Notification {
     pub payer_info: Option<PayerInfo>, //  string	N	-   only merchant got approved by Binance Operation's approval will receive this payerInfo	payer information, refer to
 }
 
-#[cfg(feature = "db")]
-mod db_impl {
-    use std::io::Write;
 
-    use diesel::deserialize::FromSql;
-    use diesel::serialize::ToSql;
-
-    use super::BizStatus;
-    use super::ReturnCode;
-
-    impl<DB> diesel::serialize::ToSql<diesel::sql_types::Text, DB> for BizStatus
-    where
-        DB: diesel::backend::Backend,
-        str: diesel::serialize::ToSql<diesel::sql_types::Text, DB>,
-    {
-        fn to_sql(&self, out: &mut diesel::serialize::Output<DB>) -> diesel::serialize::Result {
-            self.name().as_str().to_sql(out)
-        }
-    }
-
-    impl<DB> diesel::deserialize::FromSql<diesel::sql_types::Text, DB> for BizStatus
-    where
-        DB: diesel::backend::Backend,
-        String: diesel::deserialize::FromSql<diesel::sql_types::Text, DB>,
-    {
-        fn from_sql(bytes: Option<&DB::RawValue>) -> diesel::deserialize::Result<Self> {
-            let name = String::from_sql(bytes)?;
-            Self::from_name(name.as_str()).ok_or_else(|| {
-                format!("Unrecognized name {:?} for {}", name, stringify!($name)).into()
-            })
-        }
-    }
-
-    impl<DB> diesel::serialize::ToSql<diesel::sql_types::Text, DB> for ReturnCode
-    where
-        DB: diesel::backend::Backend,
-        str: diesel::serialize::ToSql<diesel::sql_types::Text, DB>,
-    {
-        fn to_sql<W: std::io::Write>(
-            &self,
-            out: &mut diesel::serialize::Output<W, DB>,
-        ) -> diesel::serialize::Result {
-            self.name().as_str().to_sql(out)
-        }
-    }
-
-    impl<DB> diesel::deserialize::FromSql<diesel::sql_types::Text, DB> for ReturnCode
-    where
-        DB: diesel::backend::Backend,
-        String: diesel::deserialize::FromSql<diesel::sql_types::Text, DB>,
-    {
-        fn from_sql(bytes: Option<&DB::RawValue>) -> diesel::deserialize::Result<Self> {
-            let name = String::from_sql(bytes)?;
-            Self::from_name(name.as_str()).ok_or_else(|| {
-                format!("Unrecognized name {:?} for {}", name, stringify!($name)).into()
-            })
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

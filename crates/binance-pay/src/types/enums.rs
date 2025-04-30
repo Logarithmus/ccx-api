@@ -9,6 +9,9 @@ use diesel::FromSqlRow;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::enum_diesel_sql;
+use crate::enum_from_name;
+
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
 #[cfg_attr(feature = "db", sql_type = "diesel::sql_types::Text")]
@@ -18,18 +21,10 @@ pub enum TradeType {
     #[serde(rename = "APP")]
     App,
 }
-derive_display_from_serialize!(TradeType);
-derive_fromstr_from_deserialize!(TradeType);
 
-impl TradeType {
-    pub fn from_name(name: &str) -> Option<Self> {
-        Self::from_str(name).ok()
-    }
-
-    pub fn name(&self) -> String {
-        self.to_string()
-    }
-}
+enum_from_name!(TradeType);
+#[cfg(feature = "db")]
+enum_diesel_sql!(TradeType);
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
@@ -40,18 +35,10 @@ pub enum StatusRequest {
     #[serde(rename = "FAIL")]
     Fail,
 }
-derive_display_from_serialize!(StatusRequest);
-derive_fromstr_from_deserialize!(StatusRequest);
 
-impl StatusRequest {
-    pub fn from_name(name: &str) -> Option<Self> {
-        Self::from_str(name).ok()
-    }
-
-    pub fn name(&self) -> String {
-        self.to_string()
-    }
-}
+enum_from_name!(StatusRequest);
+#[cfg(feature = "db")]
+enum_diesel_sql!(StatusRequest);
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
@@ -74,108 +61,10 @@ pub enum StatusOrder {
     #[serde(rename = "EXPIRED")]
     Expired,
 }
-derive_display_from_serialize!(StatusOrder);
-derive_fromstr_from_deserialize!(StatusOrder);
 
-impl StatusOrder {
-    pub fn from_name(name: &str) -> Option<Self> {
-        Self::from_str(name).ok()
-    }
-
-    pub fn name(&self) -> String {
-        self.to_string()
-    }
-}
-
+enum_from_name!(StatusOrder);
 #[cfg(feature = "db")]
-mod db_impl {
-    use std::io::Write;
-
-    use diesel::deserialize::FromSql;
-    use diesel::serialize::ToSql;
-
-    use super::StatusOrder;
-    use super::StatusRequest;
-    use super::TradeType;
-
-    impl<DB> diesel::serialize::ToSql<diesel::sql_types::Text, DB> for TradeType
-    where
-        DB: diesel::backend::Backend,
-        str: diesel::serialize::ToSql<diesel::sql_types::Text, DB>,
-    {
-        fn to_sql<W: std::io::Write>(
-            &self,
-            out: &mut diesel::serialize::Output<W, DB>,
-        ) -> diesel::serialize::Result {
-            self.name().as_str().to_sql(out)
-        }
-    }
-
-    impl<DB> diesel::deserialize::FromSql<diesel::sql_types::Text, DB> for TradeType
-    where
-        DB: diesel::backend::Backend,
-        String: diesel::deserialize::FromSql<diesel::sql_types::Text, DB>,
-    {
-        fn from_sql(bytes: Option<&DB::RawValue>) -> diesel::deserialize::Result<Self> {
-            let name = String::from_sql(bytes)?;
-            Self::from_name(name.as_str()).ok_or_else(|| {
-                format!("Unrecognized name {:?} for {}", name, stringify!($name)).into()
-            })
-        }
-    }
-
-    impl<DB> diesel::serialize::ToSql<diesel::sql_types::Text, DB> for StatusRequest
-    where
-        DB: diesel::backend::Backend,
-        str: diesel::serialize::ToSql<diesel::sql_types::Text, DB>,
-    {
-        fn to_sql<W: std::io::Write>(
-            &self,
-            out: &mut diesel::serialize::Output<W, DB>,
-        ) -> diesel::serialize::Result {
-            self.name().as_str().to_sql(out)
-        }
-    }
-
-    impl<DB> diesel::deserialize::FromSql<diesel::sql_types::Text, DB> for StatusRequest
-    where
-        DB: diesel::backend::Backend,
-        String: diesel::deserialize::FromSql<diesel::sql_types::Text, DB>,
-    {
-        fn from_sql(bytes: Option<&DB::RawValue>) -> diesel::deserialize::Result<Self> {
-            let name = String::from_sql(bytes)?;
-            Self::from_name(name.as_str()).ok_or_else(|| {
-                format!("Unrecognized name {:?} for {}", name, stringify!($name)).into()
-            })
-        }
-    }
-
-    impl<DB> diesel::serialize::ToSql<diesel::sql_types::Text, DB> for StatusOrder
-    where
-        DB: diesel::backend::Backend,
-        str: diesel::serialize::ToSql<diesel::sql_types::Text, DB>,
-    {
-        fn to_sql<W: std::io::Write>(
-            &self,
-            out: &mut diesel::serialize::Output<W, DB>,
-        ) -> diesel::serialize::Result {
-            self.name().as_str().to_sql(out)
-        }
-    }
-
-    impl<DB> diesel::deserialize::FromSql<diesel::sql_types::Text, DB> for StatusOrder
-    where
-        DB: diesel::backend::Backend,
-        String: diesel::deserialize::FromSql<diesel::sql_types::Text, DB>,
-    {
-        fn from_sql(bytes: Option<&DB::RawValue>) -> diesel::deserialize::Result<Self> {
-            let name = String::from_sql(bytes)?;
-            Self::from_name(name.as_str()).ok_or_else(|| {
-                format!("Unrecognized name {:?} for {}", name, stringify!($name)).into()
-            })
-        }
-    }
-}
+enum_diesel_sql!(StatusOrder);
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
@@ -192,18 +81,10 @@ pub enum TerminalType {
     #[serde(rename = "OTHERS")]
     Others,
 }
-derive_display_from_serialize!(TerminalType);
-derive_fromstr_from_deserialize!(TerminalType);
 
-impl TerminalType {
-    pub fn from_name(name: &str) -> Option<Self> {
-        Self::from_str(name).ok()
-    }
-
-    pub fn name(&self) -> String {
-        self.to_string()
-    }
-}
+enum_from_name!(TerminalType);
+#[cfg(feature = "db")]
+enum_diesel_sql!(TerminalType);
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
@@ -214,18 +95,8 @@ pub enum OsType {
     #[serde(rename = "ANDRIOD")]
     Andriod,
 }
-derive_display_from_serialize!(OsType);
-derive_fromstr_from_deserialize!(OsType);
 
-impl OsType {
-    pub fn from_name(name: &str) -> Option<Self> {
-        Self::from_str(name).ok()
-    }
-
-    pub fn name(&self) -> String {
-        self.to_string()
-    }
-}
+enum_from_name!(OsType);
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq, Default)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]

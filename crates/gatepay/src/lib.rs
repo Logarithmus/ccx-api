@@ -1,13 +1,13 @@
 extern crate core;
 
-#[macro_use]
-pub mod macros;
-
 pub mod api;
 #[cfg(feature = "with_network")]
 pub mod client;
 pub mod notification;
 pub mod util;
+
+#[macro_use]
+mod enums;
 
 #[cfg(feature = "with_network")]
 pub use self::with_network::*;

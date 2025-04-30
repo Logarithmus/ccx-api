@@ -1,7 +1,6 @@
 use serde::Deserialize;
 use serde::Serialize;
 use strum::AsRefStr;
-use strum::EnumString;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -10,7 +9,7 @@ use strum::EnumString;
     derive(diesel::AsExpression, diesel::FromSqlRow)
 )]
 #[cfg_attr(feature = "with_diesel", sql_type = "diesel::sql_types::Text")]
-#[derive(EnumString, AsRefStr)]
+#[derive(AsRefStr)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum BizType {
     /// Notification of non-address payment order status change to payment success PAY_SUCCESS,
@@ -28,5 +27,7 @@ pub enum BizType {
     PayActually,
 }
 
+
+crate::enum_from_name!(BizType);
 #[cfg(feature = "with_diesel")]
-impl_diesel1!(BizType);
+crate::enum_diesel_sql!(BizType);
