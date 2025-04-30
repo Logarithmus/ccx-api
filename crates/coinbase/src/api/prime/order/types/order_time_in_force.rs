@@ -7,7 +7,7 @@ use crate::api::prime::prelude::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
-#[cfg_attr(feature = "db", diesel(sql_type = "diesel::sql_types::Text"))]
+#[cfg_attr(feature = "db", diesel(sql_type = diesel::sql_types::Text))]
 pub enum PortfolioOrderTimeInForce {
     /// Expires at a certain date/time.
     #[serde(rename = "GOOD_UNTIL_DATE_TIME")]

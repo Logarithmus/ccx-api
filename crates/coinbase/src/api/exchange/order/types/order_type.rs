@@ -7,7 +7,7 @@ use crate::api::exchange::prelude::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
-#[cfg_attr(feature = "db", diesel(sql_type = "diesel::sql_types::Text"))]
+#[cfg_attr(feature = "db", diesel(sql_type = diesel::sql_types::Text))]
 #[serde(rename_all = "snake_case")]
 pub enum OrderType {
     /// A [limit order](https://en.wikipedia.org/wiki/Order_(exchange)#Limit_order).

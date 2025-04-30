@@ -15,7 +15,7 @@ use crate::TradeType;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
-#[cfg_attr(feature = "db", diesel(sql_type = "diesel::sql_types::Text"))]
+#[cfg_attr(feature = "db", diesel(sql_type = diesel::sql_types::Text))]
 pub enum BizStatus {
     #[serde(rename = "PAY_SUCCESS")]
     PaySuccess,
@@ -47,7 +47,7 @@ crate::enum_diesel_sql!(BizStatus);
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
-#[cfg_attr(feature = "db", diesel(sql_type = "diesel::sql_types::Text"))]
+#[cfg_attr(feature = "db", diesel(sql_type = diesel::sql_types::Text))]
 pub enum ReturnCode {
     #[serde(rename = "SUCCESS")]
     Success,

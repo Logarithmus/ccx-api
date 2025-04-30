@@ -8,7 +8,7 @@ use strum::AsRefStr;
     feature = "with_diesel",
     derive(diesel::AsExpression, diesel::FromSqlRow)
 )]
-#[cfg_attr(feature = "with_diesel", diesel(sql_type = "diesel::sql_types::Text"))]
+#[cfg_attr(feature = "with_diesel", diesel(sql_type = diesel::sql_types::Text))]
 #[derive(AsRefStr)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
 pub enum BizType {

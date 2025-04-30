@@ -56,7 +56,7 @@ pub struct EnvType {
     feature = "with_diesel",
     derive(diesel::AsExpression, diesel::FromSqlRow)
 )]
-#[cfg_attr(feature = "with_diesel", diesel(sql_type = "diesel::sql_types::Text"))]
+#[cfg_attr(feature = "with_diesel", diesel(sql_type = diesel::sql_types::Text))]
 pub enum TerminalType {
     App,
     Web,

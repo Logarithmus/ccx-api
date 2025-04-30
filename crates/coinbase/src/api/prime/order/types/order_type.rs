@@ -7,7 +7,7 @@ use crate::api::prime::prelude::*;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
-#[cfg_attr(feature = "db", diesel(sql_type = "diesel::sql_types::Text"))]
+#[cfg_attr(feature = "db", diesel(sql_type = diesel::sql_types::Text))]
 pub enum PortfolioOrderType {
     /// A [market order](https://en.wikipedia.org/wiki/Order_(exchange)#Market_order).
     #[serde(rename = "MARKET")]
