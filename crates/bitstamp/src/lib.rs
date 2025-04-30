@@ -13,8 +13,6 @@ pub mod util;
 pub use error::*;
 pub use proto::*;
 pub use util::*;
-#[cfg(feature = "with_network")]
-pub use with_network::*;
 
 #[cfg(feature = "with_network")]
 mod with_network {

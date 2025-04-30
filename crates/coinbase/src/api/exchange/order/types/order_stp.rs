@@ -14,7 +14,7 @@ use crate::api::exchange::prelude::*;
 /// [https://docs.cloud.coinbase.com/exchange/docs/matching-engine#self-trade-prevention]
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
-#[cfg_attr(feature = "db", sql_type = "diesel::sql_types::Text")]
+#[cfg_attr(feature = "db", diesel(sql_type = "diesel::sql_types::Text"))]
 pub enum OrderStp {
     /// Cancel smaller order and decrement larger order by the smaller size.
     /// If the same size, cancel both.

@@ -6,6 +6,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_plain;
 
+#[cfg(feature = "db")]
 #[macro_use]
 extern crate diesel;
 

@@ -3,7 +3,7 @@ use crate::api::prime::prelude::*;
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, Eq, PartialEq)]
 #[cfg_attr(test, derive(enum_iterator::Sequence))]
 #[cfg_attr(feature = "db", derive(AsExpression, FromSqlRow))]
-#[cfg_attr(feature = "db", sql_type = "diesel::sql_types::Text")]
+#[cfg_attr(feature = "db", diesel(sql_type = "diesel::sql_types::Text"))]
 pub enum ActivityUserActionKind {
     #[serde(rename = "OTHER_ACTION")]
     Other,
