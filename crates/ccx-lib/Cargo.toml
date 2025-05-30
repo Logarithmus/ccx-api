@@ -8,11 +8,10 @@ authors.workspace = true
 default = []
 console_formatter = ["dep:console"]
 websocket = [
-    "dep:soketto",
-    "dep:tokio",
-    "dep:tokio-rustls",
-    "dep:webpki-roots",
-    "dep:tokio-util"
+  "dep:soketto",
+  "dep:tokio-rustls",
+  "dep:webpki-roots",
+  "dep:tokio-util",
 ]
 
 [dependencies]
@@ -29,8 +28,12 @@ serde_urlencoded.workspace = true
 smallvec.workspace = true
 reqwest.workspace = true
 serde.workspace = true
-tokio = { version = "1", default-features = false, features = ["net"], optional = true }
-tokio-rustls = { version = "0.26", optional = true }
+tokio = { version = "1", default-features = false, features = ["net"] }
+tokio-rustls = { version = "0.26", default-features = false, features = [
+  "tls12",
+  "logging",
+  "ring",
+], optional = true }
 tokio-util = { version = "0.7", features = ["compat"], optional = true }
 tracing.workspace = true
 url.workspace = true

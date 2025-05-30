@@ -52,47 +52,35 @@ pub struct SpotTickerResponse {
     /// Currency pair
     pub currency_pair: SmartString,
     /// Last trading price
-    #[serde(default, with = "crate::util::maybe_str")]
     pub last: Option<Decimal>,
     /// Recent lowest ask
-    #[serde(default, with = "crate::util::maybe_str")]
     pub lowest_ask: Option<Decimal>,
     /// Recent highest bid
-    #[serde(default, with = "crate::util::maybe_str")]
     pub highest_bid: Option<Decimal>,
     /// Change percentage in the last 24h
-    #[serde(default, with = "crate::util::maybe_str")]
     pub change_percentage: Option<Decimal>,
     /// utc0 timezone, the percentage change in the last 24 hours
-    #[serde(default, with = "crate::util::maybe_str")]
     pub change_utc0: Option<Decimal>,
     /// utc8 timezone, the percentage change in the last 24 hours
-    #[serde(default, with = "crate::util::maybe_str")]
     pub change_utc8: Option<Decimal>,
     /// Base currency trade volume in the last 24h
-    #[serde(default, with = "crate::util::maybe_str")]
     pub base_volume: Option<Decimal>,
     /// Quote currency trade volume in the last 24h
-    #[serde(default, with = "crate::util::maybe_str")]
     pub quote_volume: Option<Decimal>,
     /// Highest price in 24h
-    #[serde(default, with = "crate::util::maybe_str")]
     pub high_24h: Option<Decimal>,
     /// Lowest price in 24h
-    #[serde(default, with = "crate::util::maybe_str")]
     pub low_24h: Option<Decimal>,
     /// ETF net value
-    #[serde(default, with = "crate::util::maybe_str")]
+
     #[serde()]
     pub etf_net_value: Option<Decimal>,
     /// ETF previous net value at re-balancing time
-    #[serde(default, with = "crate::util::maybe_str")]
     pub etf_pre_net_value: Option<Decimal>,
     /// ETF previous re-balancing time
     #[serde_as(as = "Option<TimestampSeconds<i64, Flexible>>")]
     pub etf_pre_timestamp: Option<DateTime<Utc>>,
     /// ETF current leverage
-    #[serde(default, with = "crate::util::maybe_str")]
     pub etf_leverage: Option<Decimal>,
 }
 

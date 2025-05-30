@@ -74,28 +74,20 @@ impl PublicRequest for CurrencyPair {}
 #[cfg_attr(test, derive(PartialEq))]
 pub struct CurrencyPairResponse {
     /// Currency pair identifier.
-    #[serde(default, with = "crate::util::maybe_str")]
     pub id: Option<types::currency_pair::CurrencyPair>,
     /// Base currency of the pair.
-    #[serde(default, with = "crate::util::maybe_str")]
     pub base: Option<types::currency_pair::CurrencyPair>,
     /// Quote currency of the pair.
-    #[serde(default, with = "crate::util::maybe_str")]
     pub quote: Option<types::currency_pair::CurrencyPair>,
     /// Trading fee associated with the currency pair.
-    #[serde(default, with = "crate::util::maybe_str")]
     pub fee: Option<Decimal>,
     /// Minimum amount of base currency to trade, null means no limit.
-    #[serde(default, with = "crate::util::maybe_str")]
     pub min_base_amount: Option<Decimal>,
     /// Minimum amount of quote currency to trade, null means no limit.
-    #[serde(default, with = "crate::util::maybe_str")]
     pub min_quote_amount: Option<Decimal>,
     /// Maximum amount of base currency to trade, null means no limit.
-    #[serde(default, with = "crate::util::maybe_str")]
     pub max_base_amount: Option<Decimal>,
     /// Maximum amount of quote currency to trade, null means no limit.
-    #[serde(default, with = "crate::util::maybe_str")]
     pub max_quote_amount: Option<Decimal>,
     /// Amount scale precision.
     pub amount_precision: Option<u32>,

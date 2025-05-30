@@ -8,14 +8,14 @@ authors.workspace = true
 default = []
 
 [dependencies]
-ccx-lib = { path = "../ccx-lib", features = ["console_formatter"] }
+ccx-lib.workspace = true
 bon.workspace = true
 derive_more.workspace = true
 chrono = "0.4"
 futures = "0.3"
 hmac = "0.12"
 http = "1"
-reqwest = { version = "0.12", features = ["json"] }
+reqwest.workspace = true
 rust_decimal = "1"
 rust_decimal_macros = "1"
 serde = { version = "1", features = ["derive"] }
@@ -28,7 +28,6 @@ sha2 = "0.10.8"
 soketto = "0.8"
 smart-string = "0.1"
 smallvec = { version = "1.14", features = ["serde"] }
-strum = { version = "0.26", features = ["derive"] }
 thiserror = "2"
 tokio = { version = "1", default-features = false, features = ["macros"] }
 tokio-util = { version = "0.7", features = ["time", "compat"] }
