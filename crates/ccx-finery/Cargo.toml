@@ -8,7 +8,7 @@ authors.workspace = true
 default = []
 
 [dependencies]
-ccx-lib = { path = "../ccx-lib", features = ["console_formatter", "websocket"] }
+ccx-lib = { path = "../ccx-lib", features = ["console_formatter"] }
 bon.workspace = true
 derive_more.workspace = true
 chrono = "0.4"
