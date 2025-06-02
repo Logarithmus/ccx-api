@@ -21,7 +21,7 @@ pub struct Accounts {
 impl Request for Accounts {
     const HTTP_METHOD: http::Method = http::Method::GET;
     const ENDPOINT: &'static str = "/api/v4/spot/accounts";
-    const COSTS: &'static RateLimitType = &RateLimitType::SpotOther;
+    const COSTS: RateLimitType = RateLimitType::SpotOther;
 
     type Response = SmallVec<[SpotAccount; 1]>;
 }

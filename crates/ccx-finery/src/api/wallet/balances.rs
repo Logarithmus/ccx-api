@@ -42,7 +42,7 @@ impl Balances {
 impl Request for Balances {
     const HTTP_METHOD: http::Method = http::Method::GET;
     const ENDPOINT: &'static str = "/api/v4/wallet/total_balance";
-    const COSTS: &'static RateLimitType = &RateLimitType::WalletTransferOrBalance;
+    const COSTS: RateLimitType = RateLimitType::WalletTransferOrBalance;
 
     type Response = BalancesResponse;
 }

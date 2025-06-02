@@ -49,7 +49,7 @@ impl GetOrder {
 impl Request for GetOrder {
     const HTTP_METHOD: http::Method = http::Method::GET;
     const ENDPOINT: &'static str = "/api/v4/spot/orders/{order_id}";
-    const COSTS: &'static RateLimitType = &RateLimitType::SpotOther;
+    const COSTS: RateLimitType = RateLimitType::SpotOther;
 
     type Response = Order;
 

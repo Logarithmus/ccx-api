@@ -28,7 +28,7 @@ impl DepositAddress {
 impl Request for DepositAddress {
     const HTTP_METHOD: http::Method = http::Method::GET;
     const ENDPOINT: &'static str = "/api/v4/wallet/deposit_address";
-    const COSTS: &'static RateLimitType = &RateLimitType::WalletOther;
+    const COSTS: RateLimitType = RateLimitType::WalletOther;
 
     type Response = DepositAddressResponse;
 }

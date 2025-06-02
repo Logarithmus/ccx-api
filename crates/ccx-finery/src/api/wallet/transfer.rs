@@ -71,7 +71,7 @@ pub enum AccountEnum {
 impl Request for Transfer {
     const HTTP_METHOD: http::Method = http::Method::POST;
     const ENDPOINT: &'static str = "/api/v4/wallet/transfers";
-    const COSTS: &'static RateLimitType = &RateLimitType::WalletTransferOrBalance;
+    const COSTS: RateLimitType = RateLimitType::WalletTransferOrBalance;
 
     type Response = TransferResponse;
 }

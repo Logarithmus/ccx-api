@@ -22,7 +22,7 @@ pub struct DepositHistory {
 impl Request for DepositHistory {
     const HTTP_METHOD: http::Method = http::Method::GET;
     const ENDPOINT: &'static str = "/api/v4/wallet/deposits";
-    const COSTS: &'static RateLimitType = &RateLimitType::WalletOther;
+    const COSTS: RateLimitType = RateLimitType::WalletOther;
 
     type Response = Vec<DepositHistoryResponse>;
 }

@@ -48,7 +48,7 @@ pub struct Withdraw {
 impl Request for Withdraw {
     const HTTP_METHOD: http::Method = http::Method::POST;
     const ENDPOINT: &'static str = "/api/v4/withdrawals";
-    const COSTS: &'static RateLimitType = &RateLimitType::WalletWithdraw;
+    const COSTS: RateLimitType = RateLimitType::WalletWithdraw;
 
     type Response = WithdrawResponse;
 }

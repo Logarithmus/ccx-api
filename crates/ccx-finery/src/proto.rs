@@ -26,7 +26,7 @@ pub trait Request: Serialize + Send + Sync {
     }
 
     /// Rate limiter bucket type and score for this request.
-    const COSTS: &'static RateLimitType = &RateLimitType::Public;
+    const COSTS: RateLimitType = RateLimitType::Public;
 
     fn costs(&self) -> &'static [(RateLimitKey, u32)] {
         &[((Self::COSTS, Self::ENDPOINT), 1)]
@@ -58,17 +58,6 @@ pub trait Response: DeserializeOwned + Send + Sync {}
 
 impl<T> Response for Vec<T> where T: Response {}
 impl<T, const N: usize> Response for smallvec::SmallVec<[T; N]> where T: Response {}
-
-impl<T> Request for &T
-where
-    T: Request,
-{
-    type Response = T::Response;
-
-    const HTTP_METHOD: http::Method = T::HTTP_METHOD;
-    const ENDPOINT: &'static str = T::ENDPOINT;
-    const COSTS: &'static RateLimitType = T::COSTS;
-}
 
 pub trait PublicRequest: Request {}
 

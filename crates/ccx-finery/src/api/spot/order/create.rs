@@ -77,7 +77,7 @@ impl CreateOrder {
 impl Request for CreateOrder {
     const HTTP_METHOD: http::Method = http::Method::POST;
     const ENDPOINT: &'static str = "/api/v4/spot/orders";
-    const COSTS: &'static RateLimitType = &RateLimitType::SpotOrderCreateChange;
+    const COSTS: RateLimitType = RateLimitType::SpotOrderCreateChange;
 
     type Response = Order;
 }

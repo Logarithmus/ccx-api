@@ -13,7 +13,7 @@ fn buckets<B: FromIterator<RateLimiterBucketWindow>>(
         .collect()
 }
 
-pub(crate) type RateLimitKey = (&'static RateLimitType, &'static str);
+pub(crate) type RateLimitKey = (RateLimitType, &'static str);
 
 #[derive(Clone, derive_more::Deref, derive_more::DerefMut)]
 pub struct RateLimiter(ccx_lib::rate_limiter::RateLimiter<RateLimitKey>);

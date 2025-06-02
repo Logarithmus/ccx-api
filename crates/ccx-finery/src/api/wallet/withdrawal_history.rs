@@ -47,7 +47,7 @@ pub struct WithdrawalHistory {
 impl Request for WithdrawalHistory {
     const HTTP_METHOD: http::Method = http::Method::GET;
     const ENDPOINT: &'static str = "/api/v4/wallet/withdrawals";
-    const COSTS: &'static RateLimitType = &RateLimitType::WalletOther;
+    const COSTS: RateLimitType = RateLimitType::WalletOther;
 
     type Response = Vec<WithdrawalHistoryResponse>;
 }

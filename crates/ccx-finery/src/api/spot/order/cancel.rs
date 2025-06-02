@@ -49,7 +49,7 @@ impl CancelOrder {
 impl Request for CancelOrder {
     const HTTP_METHOD: http::Method = http::Method::GET;
     const ENDPOINT: &'static str = "/api/v4/spot/orders/{order_id}";
-    const COSTS: &'static RateLimitType = &RateLimitType::SpotOrderCancel;
+    const COSTS: RateLimitType = RateLimitType::SpotOrderCancel;
 
     type Response = Order;
 
